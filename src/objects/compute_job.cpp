@@ -42,7 +42,7 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	if (!n_splits) n_splits = 1;
 	n_segments_per_window = G.vecG[ind]->n_segments/n_splits;
 
-	//Recursive split into overalaping windows
+	//Recursive split into overlaping windows
 	vector < unsigned int > output = vector < unsigned int > (2, 0); output[1] = G.vecG[ind]->n_segments -1;
 	if (n_segments_per_window >= 2) split(n_segments_per_window, 0, G.vecG[ind]->n_segments-1, output);
 	n_windows = output.size()/2;

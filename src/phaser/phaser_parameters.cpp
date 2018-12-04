@@ -26,7 +26,7 @@ void phaser::declare_options() {
 	opt_pbwt.add_options()
 			("pbwt-disable-init", "Do not initialise haplotypes by PBWT (rephase input haplotype data)")
 			("pbwt-modulo", bpo::value<int>()->default_value(8), "Storage frequency of PBWT indexes in variant numbers (i.e. 16 means storage every 16 variants)")
-			("pbwt-depth", bpo::value<int>()->default_value(2), "Depth of PBWT indexes to condition on");
+			("pbwt-depth", bpo::value<int>()->default_value(4), "Depth of PBWT indexes to condition on");
 	
 	bpo::options_description opt_hmm ("HMM parameters");
 	opt_hmm.add_options()
