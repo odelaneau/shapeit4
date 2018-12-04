@@ -1,0 +1,394 @@
+<!doctype html>
+
+<link href="css/style.css" rel="stylesheet">
+<head>
+	<meta charset="utf-8">
+        
+	<title>SHAPEIT4</title>
+	<meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<!--Home page style-->
+<header id="header" class="header">
+	<h1><b>SHAPEIT4</b></h1>
+	<h2><b>S</b>egmented <b>HAP</b>lotype <b>E</b>stimation and <b>I</b>mputation <b>T</b>ools version <b>4</b></h2>
+</header>
+
+<div class="container">
+	<ul class="nav navbar-nav">
+        	<li><a href="#introduction">Introduction</a></li>
+		<li><a href="#installation">Installation</a></li>
+		<li><a href="#documentation">Documentation</a></li>
+		<li><a href="#history">History</a></li>
+		<li><a href="#contact">Contact</a></li>
+	</ul>
+</div>
+
+
+<!-- Section INFORMATION -->
+<section id="introduction" class="sections lightbg">
+	<div class="container">
+		<h1>Introduction</h1>
+		<div class="separator"></div>
+		<p>SHAPEIT4 is a fast and accurate method for <a href="https://en.wikipedia.org/wiki/Haplotype_estimation">estimation of haplotypes</a> (aka phasing) for SNP array and sequencing data. The version 4 is a refactored and improved version of the SHAPEIT algorithm with multiple key additional features:</p>
+		<ul>
+			<li>It includes a Positional Burrow Wheeler Transform (PBWT) based approach to quickly select a small set of informative conditioning haplotypes to be used when updating the phase of an individual.</li>
+			<li>It leverages phase information contained in sequencing reads. It is designed to be run after a first step of haplotype assembly that regroups heterozygous genotypes into phase sets.</li>
+			<li>It accounts for sets of pre-phased genotypes (i.e. haplotype scaffold). The scaffold can be derived either from family data or large reference panels.</li>
+			<li>It reads and writes files using HTSlib for better I/O performance in either VCF or BCF formats.</li>
+			<li>It re-implements genotype graph and HMM routines or better hardware usage and performance.</li>
+			<li>It provides the code in an open source format (licence MIT) on github.</li>
+		</ul>
+		<p>If you use the SHAPEIT4 in your research work, please cite the following paper:</p>
+		<p><i>O. Delaneau, M. Robinson, JF. Zagury, J. Marchini, ET. Dermitzakis. Integrative haplotype estimation with sub-linear complexity. BioRxiv 2018.</i></p>
+
+		<p>SHAPEIT4 is available under the <a href="https://en.wikipedia.org/wiki/MIT_License">MIT licence</a> on the github repository <a href="https://github.com/odelaneau/shapeit4">https://github.com/odelaneau/shapeit4</a>.</p>
+	</div>
+</section>
+
+<!-- Section INSTALLATION -->
+<section id="installation" class="sections">
+    <div class="container">
+        <div class="scroll-top"><a href="#header"><div class="scrollup">&uarr;</div></a>
+        <div class="heading text-center">
+            <h1>installation</h1>
+            <div class="separator"></div>
+        </div>
+        <div class="row">
+		<p>Make sure that the two following libraries are installed on your system:</p>
+		<ol>
+			<li><a href="http://www.htslib.org/">HTSlib</a>: A C library for reading/writing high-throughput sequencing data.</li>
+			<li><a href="https://www.boost.org/">BOOST</a>: A free peer-reviewed portable C++ source libraries.</li>
+		</ol>
+		<p>Make sure that the following standard library flags can be used by g++ on your system:</p>
+		<ul>
+			<li><code>-lz</code>, <code>-lbz2</code> and <code>-llzma</code> for reading/writing compressed files.</li>
+			<li><code>-lm</code> for basic math operations.</li>
+			<li><code>-lpthread</code> for multi-threading.</li>
+		</ul>
+		<p>Download the last version of the SHAPEIT4 code using:</p>
+		<code>git clone https://github.com/odelaneau/shapeit4.git</code>
+		<p>Navigate to the downloaded folder using <code>cd shapeit4</code>.</p>
+		<p>You'll find there the following folders:</p>
+		<ul>
+			<li><code>bin</code>: folder for the compiled binary.</li>
+			<li><code>doc</code>: source code of this website.</li>
+			<li><code>obj</code>: folder with all binary objects.</li>
+			<li><code>src</code>: folder with all SHAPIT4 source code.</li>
+			<li><code>test</code>: folder with small example datasets.</li>
+			<li><code>makefile</code> to compile the code.</li>
+		</ul>
+		<p>Modify the <code>makefile</code> (lines 20-23) so that the following variables are correctly set up:</p>
+		<ul>
+			<li><code>HTSLD_INC</code>: folder containing the HTSlib header files,</li>
+			<li><code>HTSLD_LIB</code>: folder containing the HTSlib binary file (libhts.a),</li>
+			<li><code>BOOST_INC</code>: folder containing the BOOST header files,</li>
+			<li><code>BOOST_LIB</code>: folder containing the BOOST binary files (libboost_iostreams.a and libboost_program_options.a).</li>
+		</ul>
+		<p>Proceed with the SHAPEIT4 compilation using <code>make</code>.</p>
+		<p>We apologize that the fiddly compilation procedure and we will certainly implement it through automake in the near future.</p>
+	</div>
+    </div> <!-- /container -->       
+</section>
+
+<!-- Section DOCUMENTATION -->
+<section id="documentation" class="sections lightbg">
+    <div class="container">
+        <div class="scroll-top"><a href="#header"><div class="scrollup">&uarr;</div></a>
+        <div class="heading text-center">
+            <h1>documentation</h1>
+            <div class="separator"></div>
+        </div>
+        <div class="row">
+		<h2>1. Simple run</h2>
+		<p>To do so with default parameters, use the following command line:</p>
+		<code>shapeit4 --input unphased.vcf.gz --map geneticmap.txt.gz --region chr20 --output phased.vcf.gz</code>
+		<p>All four options are mandatory and their descriptions are:</p>
+		<ul>
+			<li><code>--input</code> specifies the input file containing unphased genotype data.</li>
+			<li><code>--map</code> specifies the genetic maps. These maps for humans can be found <a href="">HERE</a>.</li>
+			<li><code>--region</code> specifies the genomic region to be phased.</li>
+			<li><code>--output</code> specifies the output VCF/BCF file containing the phased genotype data (i.e. haplotypes).</li>
+		</ul>
+
+		<h2>2. Phasing a chunk of data</h2>
+		<p>To phase the 1Mb of input data located in the genomic interval 2Mb-3Mb, use:</p>
+		<code>shapeit4 --input unphased.vcf.gz --map geneticmap.txt.gz --region <b>chr20:2000000-3000000</b> --output phased.vcf.gz</code>
+		<p>Of note, the <code>--region</code> option is mandatory. Double check that the chromosome ID matches one of those specified in the VCF file. A common mistake is to use <i>chr20</i> for chromosome 20 for example, while it is specified as <i>20</i> in the VCF file.</p>
+
+		<h2>3. BCF files</h2>
+		<p>SHAPEIT4 file automatically detects the format of the input file. To tell it to use BCF as output file, just use the correct filename extension as follows:</p>
+		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.<b>bcf</b></code>
+
+		<h2>4. Multi-threading</h2>
+		<p>To phase the example dataset on 4 CPU cores using 4 threads, use the <code>--thread</code> option as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--thread 4</b></code>
+
+		<h2>5. Iteration scheme</h2>
+		<p>To specify your own iteration sequence, use the <code>--mcmc-iterations</code> option:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--mcmc-iterations 6b,1p,2b,1p,2b,8m</b></code>
+		<p>The three different kinds of iterations are:</p>
+		<ul>
+			<li><code>b</code>: <i>burn-in iteration</i>. Only haplotype sampling and no storage of transition probabilities. To be used for convergence purpose.</li>
+			<li><code>p</code>: <i>pruning iteration</i>. New haplotype are sampled and transition probabilities are used to trim unlikely paths in the genotype graphs. Using few of them once the algotrithm has converged helps to get better estimates. They have to be used after few burn-in iterations and before main iterations. It is recommended to run them paired with burn-in iterations, i.e. <code>1b,1p</code>.</li>
+			<li><code>m</code>: <i>main iteration</i>. New haplotype are sampled and transition probabilities are stored and averaged in memory. To be used as final iteration stage to produce final estimates.</li>
+		</ul>
+		<p>By default, the sequence used by SHAPEIT4 is <code>5b,1p,1b,1p,1b,1p,5m</code>. It provided a good trade-off between speed and accuracy in our experiments. If running time is not an issue, you may consider increasing the number of iterations using <code>--mcmc-iterations 10b,1p,1b,1p,1b,1p,1b,1p,10m</code> for instance.</p>
+		
+		<h2>6. Tuning the PBWT based selection</h2>
+		<p>Reducing the number of conditioning neighbours in the PBWT can be achieved using the <code>--pbwt-depth</code> option. The default value is 4. Decreasing it results in faster runs at the cost of some accuracy.</p>
+		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-depth 2</b></code>
+		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The default value is 8. Decreasing this results in more memory usage.</p>
+		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-modulo 8</b></code>
+		<p>You can also change the size of the genomic window into which phasing is carried out using the option <code>--window</code>. The default value is 2e6 base pairs (i.e. 2Mb). Increasing it results in more conditioning haplotypes being used and therefore increased running times. It is preferable to use <code>--pbwt-depth</code> instead of <code>--window</code> to increase the number of conditioning haplotypes in order to increase accuracy. Anyway, this can be done as follows:</p>
+		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--window 5e6</b></code>
+ 
+		<h2>7. Specifying initial estimates</h2>
+		<p>By default, SHAPEIT4 uses a quick PBWT based algorithm to initialize the haplotypes. This can be disabled using <code>--pbwt-disable-init</code>. This is particularly useful if you want to specify your own starting point for the MCMC or if you want to refine some haplotypes you estimated in the past. Initial haplotype estimates are specified in the input VCF/BCF using the option <code>--input</code> and phased genotypes, e.g. <code>0|1</code>. Example command line:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-disable-init</b></code>
+
+		<h2>8. Reproducibility</h2>
+		<p>Making reproducible runs can sometimes be useful. To do so, you need to specify the random generator seed using <code>--seed</code> and to use a single thread. Using multi-threading prevents reproducibility.</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--seed 123456</b></code>
+
+		<h2>9. Using a reference panel</h2>
+		<p>Taking into account reference haplotypes when phasing can improve the accuracy of the estimates, especially when the number of reference haplotypes is much large than the number of individuals to be phased. To do so, proceed as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--reference reference.bcf</b> --output phased.bcf</code>
+		<p>SHAPEIT4 only retain variants that are in the overlap (i.e. intersection) between the two panels specified with <code>--input</code> and <code>--reference</code>. In practice, it proceeds exactly the same way than <code>bcftool isec -c none</code> and therefore keeps only variants with chromosome ID, position, REF and ALT alleles that perfectly match between the two panels.</p>
+
+		<h2>10. Using haplotype scaffolds</h2>
+		<p>Haplotype scaffolds can be used to incorporate prior information about the phase of some heterozygous genotypes, coming from large reference panels of haplotypes or family information for instance. A scaffold is usually defined at a sparser set of variants than the main panel. Example run:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--scaffold scaffold.bcf</b> --output phased.bcf</code>
+		<p>Similarly to <code>--reference</code>, only variants that are in the intersection with the main panel are retained. Variants in the scaffold and the main panels are not phased and remain unchnaged. Variants not in the scaffold but in the main panel are phased onto the scaffold. Intersection is done similarly to <code>bcftool isec -c none</code>. Only individuals that appear in the two files are scaffolded (IDs need to match), those that are in the main panel and not in the scaffold are not scaffolded but appear in the output. Those that are in the scaffold and not in the main panel are not used and do not appear in the output.</p>
+
+		<h2>11. Using phase sets</h2>
+		<p>Phase sets are groups of heterozygous genotypes at which phase have been infered using haplotype assembly. To achieve haplotype assembly, we recommend using <a href="https://whatshap.readthedocs.io/en/latest/">WhatsHap</a> but other software can also be considered. Phase sets are specified in the VCF/BCF file format using the <code>PS</code> field. Note that the <code>PS</code> needs to be defined in the VCF/BCF as a 32bits integer since we read them using the C function <code>bcf_get_format_int32</code>. If you define them as string, they won't be taken into account. Example run:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--use-PS 0.0001</b> --output phased.bcf</code>
+		<p>The argument of the <code>--use-PS</code> defines the expected error rate in the phase sets. You need to change the value depending on your confidence in the haplotype assembly calls. In most of the cases, we recomment using <i>0.0001</i>.</p>
+
+ 		<h2>12. Complex run</h2>
+		<p>SHAPEIT4 allows using all combinations of options described above, such as:</p>
+		<code>shapeit4 --input unphased.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--map geneticmap.txt.gz \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--region chr20 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--reference reference.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--scaffold scaffold.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--thread 4 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--output phased.bcf<br></code>
+		<p>This command allows phasing the example dataset using (i) a reference panel, (ii) a scaffold of haplotypes and (iii) the phase sets specified in the input file, all this in a multi-threaded manner.</p>
+
+		<h2>13. Log file</h2>
+		<p>To record all the verbose that appear on the screen, use the <code>--log</code> option as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--log phased.log</b></code>
+		<p>We strongly recommend to use this option for any run.</p>
+
+		<h2>14. Option summary</h2>
+		<p>The full list of options can be obtained by running the command:</p>
+		<code>shapeit4 <b>--help</b></code>
+		<p>This should output this list of options:</b>
+		 <table style="width:100%" border="1">
+			<tr>
+				<th width="20%">Long form</th>
+				<th width="15%">Short form</th>
+				<th width="10%">Argument</th>
+				<th width="55%">Description</th>
+			</tr>
+			<tr>
+				<td><code>--help</code></td>
+				<td>NA</td>
+				<td>NA</td>
+				<td>Brief description for the options.</td>
+			</tr>
+			<tr>
+				<td><code>--seed</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td>Seed for random number generator. Default is 15052011.</td>
+			</tr>
+			<tr>
+				<td><code>--thread</code></td>
+				<td><code>-T</code></td>
+				<td>INT</td>
+				<td>Seed for random number generator. Default is 15052011.</td>
+			</tr>
+			<tr>
+				<td><code>--input</code></td>
+				<td><code>-I</code></td>
+				<td>STRING</td>
+				<td>Input VCF/BCF file to be phased.</td>
+			</tr>
+			<tr>
+				<td><code>--reference</code></td>
+				<td><code>-H</code></td>
+				<td>STRING</td>
+				<td>Reference haplotypes in VCF/BCF.</td>
+			</tr>
+			<tr>
+				<td><code>--scaffold</code></td>
+				<td><code>-S</code></td>
+				<td>STRING</td>
+				<td>Haplotype scaffold in VCF/BCF.</td>
+			</tr>
+			<tr>
+				<td><code>--map</code></td>
+				<td><code>-M</code></td>
+				<td>STRING</td>
+				<td>Genetic map.</td>
+			</tr>
+			<tr>
+				<td><code>--region</code></td>
+				<td><code>-R</code></td>
+				<td>STRING</td>
+				<td>Target region (e.g. chr20:1000000-2000000).</td>
+			</tr>
+			<tr>
+				<td><code>--use-PS</code></td>
+				<td>NA</td>
+				<td>FLOAT</td>
+				<td>Use phase sets in input files assuming an error rate of FLOAT.</td>
+			</tr>
+			<tr>
+				<td><code>--mcmc-iterations</code></td>
+				<td>NA</td>
+				<td>STRING</td>
+				<td>Iteration scheme for the MCMC. Default is 5b,1p,1b,1p,1b,1p,5m.</td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-disable-init</code></td>
+				<td>NA</td>
+				<td>NA</td>
+				<td>Do not initialise haplotypes by PBWT (rephase input haplotype data).</td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-modulo</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td>Storage frequency of PBWT indexes in variant numbers. Default is 8 (i.e. storage every 8 variants).</td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-depth</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td>Depth of PBWT indexes to condition on. Default is 4.</td>
+			</tr>
+			<tr>
+				<td><code>--window</code></td>
+				<td>NA</td>
+				<td>FLOAT</td>
+				<td>Minimal size of the phasing window. Default is 2Mb (i.e. 2e6).</td>
+			</tr>
+			<tr>
+				<td><code>--output</code></td>
+				<td><code>-O</code></td>
+				<td>STRING</td>
+				<td>Phased haplotypes in VCF/BCF format.</td>
+			</tr>
+			<tr>
+				<td><code>--log</code></td>
+				<td>NA</td>
+				<td>STRING</td>
+				<td>Log file.</td>
+			</tr>
+		</table> 
+		<p>Using short form options, the complex command line described above (section 12) is:</p>
+		<code>shapeit4 -I unphased.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-M geneticmap.txt.gz \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-R chr20 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-H reference.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-S scaffold.bcf \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-T 4 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-O phased.bcf<br></code>
+
+        </div>
+    </div> <!-- /container -->       
+</section>
+
+<!-- Section HISTORY -->
+<section id="history" class="sections">
+    <div class="container">
+        <div class="scroll-top"><a href="#header"><div class="scrollup">&uarr;</div></a>
+        <div class="heading text-center">
+            <h1>DEvelopment History</h1>
+            <div class="separator"></div>
+        </div>
+        <div class="row">
+		<p>SHAPEIT has been developed by multiple researchers over the years:</p>
+		<ul>
+			<li>Olivier Delaneau (<b>OD</b>), University of Lausanne, Switzerland. OD is the main developer of the code from version 1 to 4 and has supervised the development of version 4.</li>
+			<li>Jonathan Marchini (<b>JM</b>), University of Oxford, UK. JM has supervised the development of versions 2 and 3.</li>
+			<li>Jean-François Zagury (<b>JFZ</b>), Conservatoire des arts et métiers, France. JFZ has supervised the development of version 1.</li>
+			<li>Jared O’Connell (<b>JO</b>), University of Oxford, UK. JO has co-developed version 3 and extended it to process closely related samples.</li>
+		</ul>
+		
+		<p>SHAPEIT has been developed across the following institutions:</p>
+		<table style="width:100%" border="0" cellpadding="10px">
+			<tr>
+				<th width="20%"><img src="images/cnam.jpg"></th>
+				<th width="20%"><img src="images/peptinov.jpg"></th>
+				<th width="20%"><img src="images/oxford.png"></th>
+				<th width="20%"><img src="images/geneva.png"></th>
+				<th width="20%"><img src="images/lausanne.jpg"></th>
+			</tr>
+		</table>
+
+		<p>In 2011, version 1 has been released. This version introduced the compact graph representation of the sampling space so that Hidden Markov Model computations can be efficiently done [1].</p>
+		<p>In 2012, version 2 has been released. This version included the approach introduced in Impute2 to select subsets of conditioning haplotypes by Hamming distance minimization and therefore to speed up computations [2]. </p>
+		<p>In 2013, version 2 has been extended to leverage phase information contained in sequencing reads [3].</p>
+		<p>In 2013, version 2 has been extended to process datasets with closely related individuals [4]. </p>
+		<p>In 2014, version 2 has been extended to handle genotype likelihoods and use haplotype scaffolds in the frame of the 1000 Genomes project [5]. </p>
+		<p>In 2016, version 3 has been released. This version was designed to process biobank scale datasets in the frame of the UK Biobank study [6].</p>
+		<p>In 2018, version 4 has been released. This version was completely refactored, includes most previous extensions into a unified framework and is open source [7]. </p>
+
+		<p><i>[1] O. Delaneau, J. Marchini, JF. Zagury (2012) A linear complexity phasing method for thousands of genomes. Nat Methods. 9(2):179-81. </i></p>
+		<p><i>[2] O. Delaneau, JF. Zagury, J. Marchini (2013) Improved whole chromosome phasing for disease and population genetic studies. Nat Methods. 10(1):5-6.  </i></p>
+		<p><i>[3] O. Delaneau, B. Howie, AJ. Cox, JF. Zagury JF, J. Marchini. Haplotype estimation using sequencing reads. Am J Hum Genet. 2013 Oct 3;93(4):687-96. </i></p>
+		<p><i>[4] J. O'Connell, D. Gurdasani, O. Delaneau, N. Pirastu, S. Ulivi, M. Cocca, M. Traglia, J. Huang, JE. Huffman, I. Rudan, R. McQuillan, RM. Fraser, H. Campbell, O. Polasek, G. Asiki, K. Ekoru, C. Hayward, AF. Wright, V. Vitart, P. Navarro, JF. Zagury, JF Wilson, D. Toniolo, P. Gasparini, N. Soranzo, MS. Sandhu, J. Marchini. A general approach for haplotype phasing across the full spectrum of relatedness. PLoS Genet. 2014 Apr 17;10(4):e1004234. </i></p>
+		<p><i>[5] O. Delaneau, J. Marchini; 1000 Genomes Project Consortium. Integrating sequence and array data to create an improved 1000 Genomes Project haplotype reference panel. Nat Commun. 2014 Jun 13;5:3934. </i></p>
+		<p><i>[6] J. O’Connell, K. Sharp, N. Shrine, L. Wain, I. Hall, M. Tobin, JF. Zagury, O. Delaneau, J. Marchini. Haplotype estimation for biobank scale datasets. Nat Genet. 2016 Jul; 48(7): 817–820. </i></p>
+		<p><i>[7] O. Delaneau, M. Robinson, JF. Zagury, J. Marchini, ET. Dermitzakis. Integrative haplotype estimation with sub-linear complexity. BioRxiv 2018.</i></p>
+	</div>
+    </div> <!-- /container -->       
+</section>
+
+<section id="contact" class="sections lightbg">
+    <div class="container">
+        <div class="scroll-top"><a href="#header"><div class="scrollup">&uarr;</div></a>
+        <div class="heading text-center">
+            <h1>Contact</h1>
+            <div class="separator"></div>
+        </div>
+        <div class="row text-center">
+		<p>Prof. <b>Olivier Delaneau</b><br>
+		Department of Computational Biology<br>
+		University of Lausanne<br>
+		olivier.delaneau@gmail.com<br>
+		+41 21 692 40 55<br>
+		<a href="https://odelaneau.github.io/lap-page/">https://odelaneau.github.io/lap-page/</a></p>
+	</div>
+    </div> <!-- /container -->       
+</section>
+
+
+
+<!--Footer-->
+<footer id="footer" class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="copyright">
+                    <p>&copy; 2018 All Rights Reserved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+
