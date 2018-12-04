@@ -14,7 +14,7 @@ O. Delaneau, M. Robinson, JF. Zagury, J. Marchini, ET. Dermitzakis. Integrative 
 
 ## Documentation
 
-GO ON THIS [WEBSITE] (https://odelaneau.github.io/shapeit4/).
+GO ON THIS WEBSITE : https://odelaneau.github.io/shapeit4/
 
 ## License
 
