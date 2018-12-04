@@ -6,7 +6,7 @@ SHAPEIT4 is a fast and accurate method for estimation of haplotypes (aka phasing
 - It accounts for sets of pre-phased genotypes (i.e. haplotype scaffold). The scaffold can be derived either from family data or large reference panels.
 - It reads and writes files using HTSlib for better I/O performance in either VCF or BCF formats.
 - The genotype graph and HMM routines have been re-implemented for better hardware usage and performance.
-- The source code is provided in an open source format (licence MIT) on github.
+- The source code is provided in an open source format (license MIT) on github.
 
 If you use the SHAPEIT4 in your research work, please cite the following paper:
 
