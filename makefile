@@ -1,38 +1,37 @@
 #COMPILER MODE C++11
 CXX=g++ -std=c++0x
 
-#COMPILER FLAGS
-CXXFLAG_REL=-O3
-LIB_FLAGS=
+#HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
+HTSLIB_INC=$(HOME)/Tools/htslib-1.9
+HTSLIB_LIB=$(HOME)/Tools/htslib-1.9/libhts.a
 
-#FILE LISTS
+#BOOST IOSTREAM & PROGRAM_OPTION LIBRARIES [SPECIFY YOUR OWN PATHS]
+BOOST_INC=/usr/include
+BOOST_LIB_IO=/usr/lib/x86_64-linux-gnu/libboost_iostreams.a
+BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
+
+#COMPILER & LINKER FLAGS
+CXXFLAG=-O3
+LDFLAG=-O3
+
+#DYNAMIC LIBRARIES
+DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
+
+#SHAPEIT SOURCES & BINARY
 BFILE=bin/shapeit4
 HFILE=$(shell find src -name *.h)
 CFILE=$(shell find src -name *.cpp)
 OFILE=$(shell for file in `find src -name *.cpp`; do echo obj/$$(basename $$file .cpp).o; done)
 VPATH=$(shell for file in `find src -name *.cpp`; do echo $$(dirname $$file); done)
 
-#DEFAULT
-all: default	
-
-#UNIL & UNIGE DESKTOP
-default: LIB_FLAGS=-lz -lbz2 -lm -lpthread -llzma 
-default: HTSLD_INC=$(HOME)/Tools/htslib-1.9
-default: HTSLD_LIB=$(HOME)/Tools/htslib-1.9
-default: BOOST_INC=/usr/include
-default: BOOST_LIB=/usr/lib/x86_64-linux-gnu
-default: CXXFLAG=$(CXXFLAG_REL)
-default: IFLAG=-Isrc -I$(HTSLD_INC) -I$(BOOST_INC)
-default: LIB_FILES=$(HTSLD_LIB)/libhts.a $(BOOST_LIB)/libboost_iostreams.a $(BOOST_LIB)/libboost_program_options.a
-default: LDFLAG=$(CXXFLAG_REL)
-default: $(BFILE)
-
 #COMPILATION RULES
+all: $(BFILE)
+
 $(BFILE): $(OFILE)
-	$(CXX) $^ $(LIB_FILES) -o $@ $(LIB_FLAGS) $(LDFLAG)
+	$(CXX) $(LDFLAG) $^ $(HTSLIB_LIB) $(BOOST_LIB_IO) $(BOOST_LIB_PO) -o $@ $(DYN_LIBS)
 
 obj/%.o: %.cpp $(HFILE)
-	$(CXX) -o $@ -c $< $(CXXFLAG) $(IFLAG)
+	$(CXX) $(CXXFLAG) -c $< -o $@ -Isrc -I$(HTSLIB_INC) -I$(BOOST_INC)
 
 clean: 
 	rm -f obj/*.o $(BFILE)

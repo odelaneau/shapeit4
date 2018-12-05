@@ -73,7 +73,7 @@
 		<p>Make sure that the two following libraries are installed on your system:</p>
 		<ol>
 			<li><a href="http://www.htslib.org/">HTSlib</a>: A C library for reading/writing high-throughput sequencing data.</li>
-			<li><a href="https://www.boost.org/">BOOST</a>: A free peer-reviewed portable C++ source libraries.</li>
+			<li><a href="https://www.boost.org/">BOOST</a>: A free peer-reviewed portable C++ source libraries. SHAPEIT4 uses two specific BOOST libraries: iostreams and program_options.</li>
 		</ol>
 		<p>Make sure that the following standard library flags can be used by g++ on your system:</p>
 		<ul>
@@ -84,24 +84,29 @@
 		<p>Download the last version of the SHAPEIT4 code using:</p>
 		<code>git clone https://github.com/odelaneau/shapeit4.git</code>
 		<p>Navigate to the downloaded folder using <code>cd shapeit4</code>.</p>
-		<p>You'll find there the following folders:</p>
+		<p>You'll find there the following folders and files:</p>
 		<ul>
 			<li><code>bin</code>: folder for the compiled binary.</li>
-			<li><code>doc</code>: source code of this website.</li>
+			<li><code>docs</code>: source code of this website.</li>
+			<li><code>maps</code>: genetic maps for human taken from HapMap.</li>
 			<li><code>obj</code>: folder with all binary objects.</li>
 			<li><code>src</code>: folder with all SHAPIT4 source code.</li>
 			<li><code>test</code>: folder with small example datasets.</li>
+			<li><code>README.md</code>: front page of the GitHub.</li>
+			<li><code>LICENSE</code>: copy of the MIT license.</li>
 			<li><code>makefile</code> to compile the code.</li>
 		</ul>
-		<p>Modify the <code>makefile</code> (lines 20-23) so that the following variables are correctly set up:</p>
+		<p>Edit the <code>makefile</code> at lines 5-6 and 9-11 so that the following variables are correctly set up (look at the paths already there for an example):</p>
 		<ul>
-			<li><code>HTSLD_INC</code>: folder containing the HTSlib header files,</li>
-			<li><code>HTSLD_LIB</code>: folder containing the HTSlib binary file (libhts.a),</li>
-			<li><code>BOOST_INC</code>: folder containing the BOOST header files,</li>
-			<li><code>BOOST_LIB</code>: folder containing the BOOST binary files (libboost_iostreams.a and libboost_program_options.a).</li>
+			<li><code>HTSLIB_INC</code> (line 5): path to the HTSlib header files,</li>
+			<li><code>HTSLIB_LIB</code> (line 6): path to the static HTSlib library (file <code>libhts.a</code>),</li>
+			<li><code>BOOST_INC</code> (line 9): path to the BOOST header files (often <code>/usr/include</code>),</li>
+			<li><code>BOOST_LIB_IO</code> (line 10): path to the static BOOST <i>iostreams</i> library (file <code>libboost_iostreams.a</code>),</li>
+			<li><code>BOOST_LIB_PO</code> (line 11): path to the static BOOST <i>program_options</i> library (file <code>libboost_iostreams.a</code>),</li>
 		</ul>
-		<p>Proceed with the SHAPEIT4 compilation using <code>make</code>.</p>
-		<p>We apologize for the fiddly compilation procedure and we will certainly implement it through automake in the near future.</p>
+		<p>The static libraries (<i>*.a</i> files) can be located with this command:</p>
+		<code>locate libboost_program_options.a libboost_iostreams.a libhts.a</code>
+		<p>Once all paths set up, proceed with the SHAPEIT4 compilation using <code>make</code>.</p>
 	</div>
     </div> <!-- /container -->       
 </section>
