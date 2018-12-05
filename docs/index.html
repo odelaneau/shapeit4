@@ -81,7 +81,13 @@
 			<li><code>-lm</code> for basic math operations.</li>
 			<li><code>-lpthread</code> for multi-threading.</li>
 		</ul>
-		<p>Download the last version of the SHAPEIT4 code using:</p>
+		<p>You can do so by checking the outcome of the following commands:</p>
+		<code>locate -b '\libz.so'</code><br>
+		<code>locate -b '\libbz2.so'</code><br>
+		<code>locate -b '\liblzma.so'</code><br>
+		<code>locate -b '\libm.so'</code><br>
+		<code>locate -b '\libpthread.so'</code><br>
+		<p>Then, download the last version of the SHAPEIT4 code using:</p>
 		<code>git clone https://github.com/odelaneau/shapeit4.git</code>
 		<p>Navigate to the downloaded folder using <code>cd shapeit4</code>.</p>
 		<p>You'll find there the following folders and files:</p>
@@ -106,7 +112,7 @@
 		</ul>
 		<p>The static libraries (<i>*.a</i> files) can be located with this command:</p>
 		<code>locate libboost_program_options.a libboost_iostreams.a libhts.a</code>
-		<p>Once all paths set up, proceed with the SHAPEIT4 compilation using <code>make</code>.</p>
+		<p>Once all paths correctly set up, proceed with the SHAPEIT4 compilation using <code>make</code>.</p>
 	</div>
     </div> <!-- /container -->       
 </section>
