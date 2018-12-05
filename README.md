@@ -2,7 +2,7 @@
 
 SHAPEIT4 is a fast and accurate method for estimation of haplotypes (aka phasing) for SNP array and sequencing data. The version 4 is a refactored and improved version of the SHAPEIT algorithm with multiple key additional features:
 - It includes a Positional Burrow Wheeler Transform (PBWT) based approach to quickly select a small set of informative conditioning haplotypes to be used when updating the phase of an individual.
-- It leverages phase information contained in sequencing reads. It is designed to be run after a first step of haplotype assembly that regroups heterozygous genotypes into phase sets.
+- We have changed that way in which phase information in sequencing reads is input into the model. We now recommend the use of the WhatsHap tool as a pre-processing step to extract phase information from a bam file..
 - It accounts for sets of pre-phased genotypes (i.e. haplotype scaffold). The scaffold can be derived either from family data or large reference panels.
 - It reads and writes files using HTSlib for better I/O performance in either VCF or BCF formats.
 - The genotype graph and HMM routines have been re-implemented for better hardware usage and performance.
