@@ -36,6 +36,7 @@ void gmap_reader::readGeneticMapFile(string fmap) {
 	vector < string > tokens;
 	int line = 0;
 	input_file fd_gmap(fmap);
+	if (fd_gmap.fail()) vrb.error("Cannot open genetic map file");
 	getline(fd_gmap, buffer, '\n');
 	int prev_bp = 0;
 	double prev_cm = 0;

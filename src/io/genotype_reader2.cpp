@@ -374,7 +374,7 @@ void genotype_reader::readGenotypes3(string funphased, string freference, string
 				a1?calt++:cref++;
 			}
 			if (line_scaf=bcf_sr_get_line(sr, 2)) {
-				ngt_scaf = bcf_get_genotypes(sr->readers[1].header, line_scaf, &gt_arr_scaf, &ngt_arr_scaf); assert(ngt_scaf == 2 * n_scaf_samples);
+				ngt_scaf = bcf_get_genotypes(sr->readers[2].header, line_scaf, &gt_arr_scaf, &ngt_arr_scaf); assert(ngt_scaf == 2 * n_scaf_samples);
 				for(int i = 0 ; i < 2 * n_scaf_samples ; i += 2) {
 					int ind = mappingS2G[DIV2(i)];
 					if (ind>=0) {

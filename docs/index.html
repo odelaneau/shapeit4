@@ -117,7 +117,7 @@
         <div class="row">
 		<h2>1. Simple run</h2>
 		<p>To do so with default parameters, use the following command line:</p>
-		<code>shapeit4 --input unphased.vcf.gz --map geneticmap.txt.gz --region chr20 --output phased.vcf.gz</code>
+		<code>shapeit4 --input unphased.vcf.gz --map chr20.b37.gmap.gz --region 20 --output phased.vcf.gz</code>
 		<p>All four options are mandatory and their descriptions are:</p>
 		<ul>
 			<li><code>--input</code> specifies the input file containing unphased genotype data.</li>
@@ -128,20 +128,20 @@
 
 		<h2>2. Phasing a chunk of data</h2>
 		<p>To phase the 1Mb of input data located in the genomic interval 2Mb-3Mb, use:</p>
-		<code>shapeit4 --input unphased.vcf.gz --map geneticmap.txt.gz --region <b>chr20:2000000-3000000</b> --output phased.vcf.gz</code>
+		<code>shapeit4 --input unphased.vcf.gz --map chr20.b37.gmap.gz --region <b>20:2000000-3000000</b> --output phased.vcf.gz</code>
 		<p>Of note, the <code>--region</code> option is mandatory. Double check that the chromosome ID matches one of those specified in the VCF file. A common mistake is to use <i>chr20</i> for chromosome 20 for example, while it is specified as <i>20</i> in the VCF file.</p>
 
 		<h2>3. BCF files</h2>
 		<p>SHAPEIT4 file automatically detects the format of the input file. To tell it to use BCF as output file, just use the correct filename extension as follows:</p>
-		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.<b>bcf</b></code>
+		<code>shapeit4 --input unphased.<b>bcf</b> --map chr20.b37.gmap.gz --region 20 --output phased.<b>bcf</b></code>
 
 		<h2>4. Multi-threading</h2>
 		<p>To phase the example dataset on 4 CPU cores using 4 threads, use the <code>--thread</code> option as follows:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--thread 4</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--thread 4</b></code>
 
 		<h2>5. Iteration scheme</h2>
 		<p>To specify your own iteration sequence, use the <code>--mcmc-iterations</code> option:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--mcmc-iterations 6b,1p,2b,1p,2b,8m</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--mcmc-iterations 6b,1p,2b,1p,2b,8m</b></code>
 		<p>The three different kinds of iterations are:</p>
 		<ul>
 			<li><code>b</code>: <i>burn-in iteration</i>. Only haplotype sampling and no storage of transition probabilities. To be used for convergence purpose.</li>
@@ -152,40 +152,40 @@
 		
 		<h2>6. Tuning the PBWT based selection</h2>
 		<p>Reducing the number of conditioning neighbours in the PBWT can be achieved using the <code>--pbwt-depth</code> option. The default value is 4. Decreasing it results in faster runs at the cost of some accuracy.</p>
-		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-depth 2</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-depth 2</b></code>
 		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The default value is 8. Decreasing this results in more memory usage.</p>
-		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-modulo 8</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-modulo 16</b></code>
 		<p>You can also change the size of the genomic window into which phasing is carried out using the option <code>--window</code>. The default value is 2e6 base pairs (i.e. 2Mb). Increasing it results in more conditioning haplotypes being used and therefore increased running times. It is preferable to use <code>--pbwt-depth</code> instead of <code>--window</code> to increase the number of conditioning haplotypes in order to increase accuracy. Anyway, this can be done as follows:</p>
-		<code>shapeit4 --input unphased.<b>bcf</b> --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--window 5e6</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--window 5e6</b></code>
  
 		<h2>7. Specifying initial estimates</h2>
 		<p>By default, SHAPEIT4 uses a quick PBWT based algorithm to initialize the haplotypes. This can be disabled using <code>--pbwt-disable-init</code>. This is particularly useful if you want to specify your own starting point for the MCMC or if you want to refine some haplotypes you estimated in the past. Initial haplotype estimates are specified in the input VCF/BCF using the option <code>--input</code> and phased genotypes, e.g. <code>0|1</code>. Example command line:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--pbwt-disable-init</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-disable-init</b></code>
 
 		<h2>8. Reproducibility</h2>
 		<p>Making reproducible runs can sometimes be useful. To do so, you need to specify the random generator seed using <code>--seed</code> and to use a single thread. Using multi-threading prevents reproducibility.</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--seed 123456</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--seed 123456</b></code>
 
 		<h2>9. Using a reference panel</h2>
 		<p>Taking into account reference haplotypes when phasing can improve the accuracy of the estimates, especially when the number of reference haplotypes is much large than the number of individuals to be phased. To do so, proceed as follows:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--reference reference.bcf</b> --output phased.bcf</code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--reference reference.bcf</b> --output phased.bcf</code>
 		<p>SHAPEIT4 only retain variants that are in the overlap (i.e. intersection) between the two panels specified with <code>--input</code> and <code>--reference</code>. In practice, it proceeds exactly the same way than <code>bcftool isec -c none</code> and therefore keeps only variants with chromosome ID, position, REF and ALT alleles that perfectly match between the two panels.</p>
 
 		<h2>10. Using haplotype scaffolds</h2>
 		<p>Haplotype scaffolds can be used to incorporate prior information about the phase of some heterozygous genotypes, coming from large reference panels of haplotypes or family information for instance. A scaffold is usually defined at a sparser set of variants than the main panel. Example run:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--scaffold scaffold.bcf</b> --output phased.bcf</code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--scaffold scaffold.bcf</b> --output phased.bcf</code>
 		<p>Similarly to <code>--reference</code>, only variants that are in the intersection with the main panel are retained. Variants in the scaffold and the main panels are not phased and remain unchnaged. Variants not in the scaffold but in the main panel are phased onto the scaffold. Intersection is done similarly to <code>bcftool isec -c none</code>. Only individuals that appear in the two files are scaffolded (IDs need to match), those that are in the main panel and not in the scaffold are not scaffolded but appear in the output. Those that are in the scaffold and not in the main panel are not used and do not appear in the output.</p>
 
 		<h2>11. Using phase sets</h2>
 		<p>Phase sets are groups of heterozygous genotypes at which phase have been infered using haplotype assembly. To achieve haplotype assembly, we recommend using <a href="https://whatshap.readthedocs.io/en/latest/">WhatsHap</a> but other software can also be considered. Phase sets are specified in the VCF/BCF file format using the <code>PS</code> field. Note that the <code>PS</code> needs to be defined in the VCF/BCF as a 32bits integer since we read them using the C function <code>bcf_get_format_int32</code>. If you define them as string, they won't be taken into account. Example run:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 <b>--use-PS 0.0001</b> --output phased.bcf</code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--use-PS 0.0001</b> --output phased.bcf</code>
 		<p>The argument of the <code>--use-PS</code> defines the expected error rate in the phase sets. You need to change the value depending on your confidence in the haplotype assembly calls. In most of the cases, we recomment using <i>0.0001</i>.</p>
 
  		<h2>12. Complex run</h2>
 		<p>SHAPEIT4 allows using all combinations of options described above, such as:</p>
 		<code>shapeit4 --input unphased.bcf \<br>
-                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--map geneticmap.txt.gz \<br>
-                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--region chr20 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--map chr20.b37.gmap.gz \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--region 20 \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--reference reference.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--scaffold scaffold.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
@@ -195,7 +195,7 @@
 
 		<h2>13. Log file</h2>
 		<p>To record all the verbose that appear on the screen, use the <code>--log</code> option as follows:</p>
-		<code>shapeit4 --input unphased.bcf --map geneticmap.txt.gz --region chr20 --output phased.bcf <b>--log phased.log</b></code>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--log phased.log</b></code>
 		<p>We strongly recommend to use this option for any run.</p>
 
 		<h2>14. Option summary</h2>
@@ -308,8 +308,8 @@
 		</table> 
 		<p>Using short form options, the complex command line described above (section 12) is:</p>
 		<code>shapeit4 -I unphased.bcf \<br>
-                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-M geneticmap.txt.gz \<br>
-                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-R chr20 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-M chr20.b37.gmap.gz \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-R 20 \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-H reference.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-S scaffold.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
