@@ -1,3 +1,24 @@
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2018 Olivier Delaneau, University of Lausanne
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+////////////////////////////////////////////////////////////////////////////////
 #include <modules/pbwt_solver.h>
 
 pbwt_solver::pbwt_solver(haplotype_set & _H) : H(_H.H_opt_var) {
@@ -32,6 +53,11 @@ void pbwt_solver::free() {
 	vector < float > ().swap(scoreBit);
 }
 
+/*
+ * This algorithm for pre-phasing genotype data using PBWT is adapted from the work of Richard Durbin
+ * See https://github.com/richarddurbin/pbwt/blob/master/pbwtImpute.c / function "phaseSweep"
+ * Original code is under MIT license
+ */
 void pbwt_solver::sweep(genotype_set & G) {
 	tac.clock();
 	vector < int > B = vector < int >(n_total_hap, 0);
