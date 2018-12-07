@@ -54,9 +54,10 @@ void pbwt_solver::free() {
 }
 
 /*
- * This algorithm for pre-phasing genotype data using PBWT is adapted from the work of Richard Durbin
- * See https://github.com/richarddurbin/pbwt/blob/master/pbwtImpute.c / function "phaseSweep"
- * Original code is under MIT license
+ * This algorithm for pre-phasing genotype data using PBWT (initialization) is adapted from the code of Richard Durbin.
+ * PBWT: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3998136/
+ * Richard Durbin: Wellcome Sanger Institute, https://www.sanger.ac.uk/people/directory/durbin-richard
+ * Original version of the code (MIT license): https://github.com/richarddurbin/pbwt/blob/master/pbwtImpute.c / function "phaseSweep"
  */
 void pbwt_solver::sweep(genotype_set & G) {
 	tac.clock();

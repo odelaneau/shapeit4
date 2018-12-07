@@ -30,19 +30,19 @@
 class genotype_set {
 public:
 	//DATA
-	int n_site, n_ind;
-	vector < genotype * > vecG;
+	int n_site, n_ind;					//Number of variants, number of individuals
+	vector < genotype * > vecG;			//Vector of genotype graphs
 
 	//CONSTRUCTOR/DESTRUCTOR
 	genotype_set();
 	~genotype_set();
 
 	//METHODS
-	void imputeMonomorphic(variant_map &);
-	unsigned int largestNumberOfTransitions();
-	unsigned long numberOfSegments();
-	void masking();
-	void solve();
+	void imputeMonomorphic(variant_map &);		//Impute to REF monomorphic variants
+	unsigned int largestNumberOfTransitions();	//Get the number of transitions in the larger genotype graph. Used to initialize memory space for multi-threading.
+	unsigned long numberOfSegments();			//Total number of segments across all genotype graphs (used for verbose).
+	void masking();								//Call function mask for all genotype graphs
+	void solve();								//Call function solve for all genotype graphs
 };
 
 #endif

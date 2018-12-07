@@ -31,15 +31,21 @@
 class haplotype_set {
 public:
 	//DATA
-	unsigned long n_site, n_hap, n_ind, n_save, mod, lengthIBD2, depth;
-	bitmatrix H_opt_hap;
-	bitmatrix H_opt_var;
-	vector < int > abs_indexes, rel_indexes;
+	unsigned long n_site;		// #variants
+	unsigned long n_hap;		// #haplotypes
+	unsigned long n_ind;		// #individuals
+	unsigned long n_save;		// #variants with PBWT indexes stored
+	unsigned long mod;			// Modulo used to store PBWT indexes
+	unsigned long depth;		// #neighbours in the PBWT to use for conditioning (--pbwt-depth)
+	unsigned long lengthIBD2;	// Minimal length of IBD2 tracks for IBD2 protection
+	bitmatrix H_opt_hap;		// Bit matrix of haplotypes (haplotype first)
+	bitmatrix H_opt_var;		// Bit matrix of haplotypes (variant first). Transposed version of H_opt_hap
+	vector < int > abs_indexes, rel_indexes;	//Variant indexing for stored PBWT indexes
 	vector < int > curr_clusters, dist_clusters, save_clusters;
 
 	//IBD2
-	vector < vector < bool > > flagIBD2;
-	vector < vector < pair < int, int > > > idxIBD2;
+	vector < vector < bool > > flagIBD2;				//IBD2 constrains on the copying process, binary form
+	vector < vector < pair < int, int > > > idxIBD2;	//IBD2 constrains on the copying process, index form
 
 	//CONSTRUCTOR/DESTRUCTOR/INITIALIZATION
 	haplotype_set();
@@ -49,8 +55,8 @@ public:
 	void allocate(variant_map &, int, int);
 	void update(genotype_set & G, bool first_time = false);
 	void select();
-	void transposeH2V(bool full);
-	void transposeV2H(bool full);
+	void transposeH2V(bool full);								//Transpose Haplotype bit matrixes
+	void transposeV2H(bool full);								//Transpose Haplotype bit matrixes
 	void transposeC2H();
 	void updateMapping();
 

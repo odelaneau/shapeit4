@@ -58,9 +58,10 @@ public:
 
 
 	/*
-	 * This algorithm for transposing bit matrices is adapted from the work of Timur Kristóf
-	 * https://github.com/Venemo/fecmagic/blob/master/src/binarymatrix.h
-	 * Original code is under MIT license
+	 * This algorithm for transposing bit matrices is adapted from the code of Timur Kristóf
+	 * Timur Kristóf: https://github.com/venemo
+	 * Original version of the code (MIT license): https://github.com/Venemo/fecmagic/blob/master/src/binarymatrix.h
+	 * Of note, function abracadabra is the same than getMultiplyUpperPart function in the original code from Timur Kristóf.
 	 */
 	void transpose(bitmatrix & BM, unsigned int _max_row, unsigned int _max_col) {
 		unsigned int max_row = _max_row + ((_max_row%8)?(8-(_max_row%8)):0);
