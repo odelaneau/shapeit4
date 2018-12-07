@@ -84,7 +84,7 @@ void genotype_reader::readGenotypes0(string funphased) {
 	// Report
 	n_geno_tot = n_main_samples*n_variants;
 	string str0 = "Hom=" + stb.str(n_geno_hom*100.0/n_geno_tot, 1) + "%";
-	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%/"):(""));
+	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%"):(""));
 	string str2 = "Mis=" + stb.str(n_geno_mis*100.0/n_geno_tot, 1) + "%";
 	string str3 = stb.str(tac.rel_time()*1.0/1000, 2) + "s";
 	vrb.bullet("VCF/BCF parsing ["+str0+" / "+str1+" / "+str2+"] ("+str3+")");
@@ -172,7 +172,7 @@ void genotype_reader::readGenotypes1(string funphased, string freference) {
 	// Report
 	n_geno_tot = n_main_samples*n_variants;
 	string str0 = "Hom=" + stb.str(n_geno_hom*100.0/n_geno_tot, 1) + "%";
-	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%/"):(""));
+	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%"):(""));
 	string str2 = "Mis=" + stb.str(n_geno_mis*100.0/n_geno_tot, 1) + "%";
 	string str3 = stb.str(tac.rel_time()*1.0/1000, 2) + "s";
 	vrb.bullet("VCF/BCF parsing ["+str0+" / "+str1+" / "+str2+"] ("+str3+")");
@@ -284,7 +284,7 @@ void genotype_reader::readGenotypes2(string funphased, string fphased) {
 	// Report
 	n_geno_tot = n_main_samples*n_variants;
 	string str0 = "Hom=" + stb.str(n_geno_hom*100.0/n_geno_tot, 1) + "%";
-	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%/"):(""));
+	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%"):(""));
 	string str2 = "Sca=" + stb.str(n_geno_sca*100.0/n_geno_tot, 3) + "%";
 	string str3 = "Mis=" + stb.str(n_geno_mis*100.0/(n_main_samples*n_variants), 1) + "%";
 	string str4 = stb.str(tac.rel_time()*1.0/1000, 2) + "s";
@@ -410,7 +410,7 @@ void genotype_reader::readGenotypes3(string funphased, string freference, string
 	// Report
 	n_geno_tot = n_main_samples*n_variants;
 	string str0 = "Hom=" + stb.str(n_geno_hom*100.0/(n_main_samples*n_variants), 1) + "%";
-	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%/"):(""));
+	string str1 = "Het=" + stb.str(n_geno_het*100.0/n_geno_tot, 1) + "%" + (use_PS_field?(" / Pha=" + stb.str(n_geno_ips*100.0/n_geno_tot, 3) + "%"):(""));
 	string str2 = "Sca=" + stb.str(n_geno_sca*100.0/n_geno_tot, 3) + "%";
 	string str3 = "Mis=" + stb.str(n_geno_mis*100.0/(n_main_samples*n_variants), 1) + "%";
 	string str4 = stb.str(tac.rel_time()*1.0/1000, 2) + "s";

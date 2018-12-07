@@ -132,10 +132,11 @@
 		<p>All four options are mandatory and their descriptions are:</p>
 		<ul>
 			<li><code>--input</code> specifies the input file containing unphased genotype data.</li>
-			<li><code>--map</code> specifies the genetic maps. These maps for humans can be found <a href="">HERE</a>.</li>
+			<li><code>--map</code> specifies the genetic maps. Maps for humans can be found <a href="https://github.com/odelaneau/shapeit4/tree/master/maps">HERE</a>.</li>
 			<li><code>--region</code> specifies the genomic region to be phased.</li>
 			<li><code>--output</code> specifies the output VCF/BCF file containing the phased genotype data (i.e. haplotypes).</li>
 		</ul>
+		<p>The file provided to <code>--input</code> needs to be indexed. This can be done using <code>bcftools index unphased.vcf.gz</code>.</p>
 
 		<h2>2. Phasing a chunk of data</h2>
 		<p>To phase the 1Mb of input data located in the genomic interval 2Mb-3Mb, use:</p>
@@ -181,12 +182,14 @@
 		<p>Taking into account reference haplotypes when phasing can improve the accuracy of the estimates, especially when the number of reference haplotypes is much large than the number of individuals to be phased. To do so, proceed as follows:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--reference reference.bcf</b> --output phased.bcf</code>
 		<p>SHAPEIT4 only retain variants that are in the overlap (i.e. intersection) between the two panels specified with <code>--input</code> and <code>--reference</code>. In practice, it proceeds exactly the same way than <code>bcftool isec -c none</code> and therefore keeps only variants with chromosome ID, position, REF and ALT alleles that perfectly match between the two panels.</p>
+		<p>The file specified  by <code>--reference</code> needs to be indexed. This can be done using <code>bcftools index reference.bcf</code>.</p>		
 
 		<h2>10. Using haplotype scaffolds</h2>
 		<p>Haplotype scaffolds can be used to incorporate prior information about the phase of some heterozygous genotypes, coming from large reference panels of haplotypes or family information for instance. A scaffold is usually defined at a sparser set of variants than the main panel. Example run:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--scaffold scaffold.bcf</b> --output phased.bcf</code>
 		<p>Similarly to <code>--reference</code>, only variants that are in the intersection with the main panel are retained. Variants in the scaffold and the main panels are not phased and remain unchnaged. Variants not in the scaffold but in the main panel are phased onto the scaffold. Intersection is done similarly to <code>bcftool isec -c none</code>. Only individuals that appear in the two files are scaffolded (IDs need to match), those that are in the main panel and not in the scaffold are not scaffolded but appear in the output. Those that are in the scaffold and not in the main panel are not used and do not appear in the output.</p>
-
+		<p>The file specified  by <code>--scaffold</code> needs to be indexed. This can be done using <code>bcftools index scaffold.bcf</code>.</p>
+		
 		<h2>11. Using phase sets</h2>
 		<p>Phase sets are groups of heterozygous genotypes at which phase have been infered using haplotype assembly. To achieve haplotype assembly, we recommend using <a href="https://whatshap.readthedocs.io/en/latest/">WhatsHap</a> but other software can also be considered. Phase sets are specified in the VCF/BCF file format using the <code>PS</code> field. Note that the <code>PS</code> needs to be defined in the VCF/BCF as a 32bits integer since we read them using the C function <code>bcf_get_format_int32</code>. If you define them as string, they won't be taken into account. Example run:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--use-PS 0.0001</b> --output phased.bcf</code>
@@ -201,6 +204,7 @@
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--scaffold scaffold.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--thread 4 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--log phased.log\<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--output phased.bcf<br></code>
 		<p>This command allows phasing the example dataset using (i) a reference panel, (ii) a scaffold of haplotypes and (iii) the phase sets specified in the input file, all this in a multi-threaded manner.</p>
 
@@ -325,7 +329,11 @@
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-S scaffold.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--use-PS 0.0001 \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-T 4 \<br>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--log phased.log \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-O phased.bcf<br></code>
+                      
+		<h2>15. Screen output decrypted</h2>
+		<img src="images/verbose.png">
 
         </div>
     </div> <!-- /container -->       
