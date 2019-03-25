@@ -54,17 +54,23 @@ void phaser::read_files_and_initialise() {
 	gmap_reader readerGM;
 	readerGM.readGeneticMapFile(options["map"].as < string > ());
 	V.setGeneticMap(readerGM);
-	M.initialise(V, options["effective-size"].as < int > (), (readerG.n_main_samples+readerG.n_ref_samples*2), 100UL, options.count("map"));
+	if (options.count("mcmc-reference")) M.initialise(V, options["effective-size"].as < int > (), readerG.n_ref_samples*2, 100UL, options.count("map"));
+	else M.initialise(V, options["effective-size"].as < int > (), (readerG.n_main_samples+readerG.n_ref_samples)*2, 100UL, options.count("map"));
 
 	//step4: Initialize haplotypes
 	H.allocate(V, options["pbwt-modulo"].as < int > (), options["pbwt-depth"].as < int > ());
 	H.update(G, true);
 	H.transposeH2V(true);
-	H.searchIBD2((int)round((options["window"].as < double > () * V.size()) / V.length()));
+	if (!options.count("mcmc-reference")) H.searchIBD2((int)round((options["window"].as < double > () * V.size()) / V.length()));
 	if (!options.count("pbwt-disable-init")) {
 		pbwt_solver solver = pbwt_solver(H);
 		solver.sweep(G);
 		solver.free();
+	}
+
+	if (options.count("mcmc-reference")) {
+		//SIMONE2: You need to write here the initializer of the required PBWT struct.
+		H.initializeSimone();
 	}
 
 	//step5: Initialize genotype structures

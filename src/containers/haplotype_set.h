@@ -62,6 +62,10 @@ public:
 
 	void searchIBD2(int);
 	bool banned(int, int, int);
+
+	//SIMONE ROUTINES
+	void initializeSimone();		//Initialization to get all required PBWT indexes and structures
+	void selectSimone();			//Given PBWT structures for reference haplotypes, this select the best conditioning states per individuals. Store all this into "save_clusters".
 };
 
 inline

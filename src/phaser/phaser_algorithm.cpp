@@ -99,7 +99,8 @@ void phaser::phase() {
 			case STAGE_MAIN:	vrb.title("Main iteration [" + stb.str(iter+1) + "/" + stb.str(iteration_counts[iteration_stage]) + "]"); break;
 			}
 			H.transposeV2H(false);
-			H.select();
+			if (options.count("mcmc-reference")) H.selectSimone();
+			else H.select();
 			H.transposeC2H();
 			phaseWindow();
 			if (options.count("mcmc-store-K")) {

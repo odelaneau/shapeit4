@@ -42,7 +42,8 @@ void phaser::declare_options() {
 	opt_mcmc.add_options()
 			("mcmc-iterations", bpo::value<string>()->default_value("5b,1p,1b,1p,1b,1p,5m"), "Iteration scheme of the MCMC")
 			("mcmc-prune", bpo::value<double>()->default_value(0.999), "Pruning threshold")
-			("mcmc-store-K", bpo::value<string>(), "Store K sizes in last iterations");
+			("mcmc-store-K", bpo::value<string>(), "Store K sizes in last iterations")
+			("mcmc-reference", "Only phase from reference panel haplotypes");
 
 	bpo::options_description opt_pbwt ("PBWT parameters");
 	opt_pbwt.add_options()
@@ -91,6 +92,9 @@ void phaser::check_options() {
 	if (!options.count("output"))
 		vrb.error("You must specify a phased output file with --output");
 
+	if (!options.count("reference") && options.count("mcmc-reference"))
+		vrb.error("You must use a reference panel when using --mcmc-disable");
+
 	if (!options.count("map"))
 		vrb.error("You must specify a genetic map file with --map");
 
@@ -127,6 +131,7 @@ void phaser::verbose_options() {
 	vrb.bullet("Seed    : " + stb.str(options["seed"].as < int > ()));
 	vrb.bullet("Threads : " + stb.str(options["thread"].as < int > ()) + " threads");
 	vrb.bullet("MCMC    : " + get_iteration_scheme());
+	if (options.count("mcmc-reference")) vrb.bullet("MCMC    : No MCMC, phase from reference panel only");
 	if (options.count("pbwt-disable-init")) vrb.bullet("PBWT    : No PBWT initialization");
 	vrb.bullet("PBWT    : Store indexes every " + stb.str(options["pbwt-modulo"].as < int > ()) + " variants");
 	vrb.bullet("PBWT    : Depth of PBWT neighbours to condition on: " + stb.str(options["pbwt-depth"].as < int > ()));
