@@ -102,6 +102,8 @@ public:
 	void make(vector < unsigned char > &);
 	void build();
 	void sample(vector < double > &);
+	void sampleForward(vector < double > &);
+	void sampleBackward(vector < double > &);
 	void solve();
 	void mapMerges(vector < double > &, double , vector < bool > &);
 	void performMerges(vector < double > &, vector < bool > &);

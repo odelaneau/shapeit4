@@ -46,6 +46,7 @@ public :
 	bool isSingleton();
 	bool isMonomorphic();
 	unsigned int getMAC();
+	double getMDR();
 };
 
 #endif

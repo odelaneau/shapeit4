@@ -31,19 +31,16 @@ class hmm_parameters {
 public :
 	//DATA
 	vector < double > t;
-	vector < double > tfreq;
 	vector < double > nt;
 	double ee;
 	double ed;
-	double efreq;
-	double dfreq;
 
 	//CONSTRUCTOR/DESTRUCTOR
 	hmm_parameters();
 	~hmm_parameters();
 
 	//METHODS
-	void initialise(variant_map &, int, int, int, bool);
+	void initialise(variant_map &, int, int);
 };
 
 #endif

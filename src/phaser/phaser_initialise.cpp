@@ -51,21 +51,23 @@ void phaser::read_files_and_initialise() {
 	G.imputeMonomorphic(V);
 
 	//step3: Read and initialise genetic map
-	gmap_reader readerGM;
-	readerGM.readGeneticMapFile(options["map"].as < string > ());
-	V.setGeneticMap(readerGM);
-	M.initialise(V, options["effective-size"].as < int > (), (readerG.n_main_samples+readerG.n_ref_samples*2), 100UL, options.count("map"));
+	if (options.count("map")) {
+		gmap_reader readerGM;
+		readerGM.readGeneticMapFile(options["map"].as < string > ());
+		V.setGeneticMap(readerGM);
+	} else V.setGeneticMap();
+	M.initialise(V, options["effective-size"].as < int > (), (readerG.n_main_samples+readerG.n_ref_samples)*2);
 
 	//step4: Initialize haplotypes
-	H.allocate(V, options["pbwt-modulo"].as < int > (), options["pbwt-depth"].as < int > ());
-	H.update(G, true);
-	H.transposeH2V(true);
-	H.searchIBD2((int)round((options["window"].as < double > () * V.size()) / V.length()));
-	if (!options.count("pbwt-disable-init")) {
-		pbwt_solver solver = pbwt_solver(H);
-		solver.sweep(G);
-		solver.free();
-	}
+	H.parametrizePBWT(options["pbwt-depth"].as < int > (), options["pbwt-modulo"].as < double > (), options["pbwt-mac"].as < int > (), options["pbwt-mdr"].as < double > (), options["thread"].as < int > ());
+	H.initializePBWTmapping(V);
+	H.allocatePBWTarrays();
+	H.updateHaplotypes(G, true);
+	H.transposeHaplotypes_H2V(true);
+	H.searchIBD2matching(V, options["ibd2"].as < double > (), options["window"].as < double > ());
+	pbwt_solver solver = pbwt_solver(H);
+	solver.sweep(G);
+	solver.free();
 
 	//step5: Initialize genotype structures
 	builder(G, options["thread"].as < int > ()).build();

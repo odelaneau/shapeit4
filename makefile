@@ -1,5 +1,5 @@
 #COMPILER MODE C++11
-CXX=g++ -std=c++0x
+CXX=g++ -std=c++11
 
 #HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
 HTSLIB_INC=$(HOME)/Tools/htslib-1.9
@@ -11,7 +11,8 @@ BOOST_LIB_IO=/usr/lib/x86_64-linux-gnu/libboost_iostreams.a
 BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 
 #COMPILER & LINKER FLAGS
-CXXFLAG=-O3
+#CXXFLAG=-O3 -march=native
+CXXFLAG=-O3 -march=native
 LDFLAG=-O3
 
 #DYNAMIC LIBRARIES

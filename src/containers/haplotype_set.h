@@ -28,48 +28,89 @@
 #include <containers/genotype_set.h>
 #include <containers/variant_map.h>
 
+struct IBD2track {
+	int ind;
+	float cm0, cm1;
+
+	IBD2track(int _ind, float _cm0, float _cm1) {
+		ind = _ind;
+		cm0 = _cm0;
+		cm1 = _cm1;
+	}
+
+	bool operator<(const IBD2track & rhs) const {
+		if (ind < rhs.ind) return true;
+		if (ind > rhs.ind) return false;
+		return (cm0 < rhs.cm0);
+	}
+
+	bool operator==(const IBD2track & rhs) const {
+		return (ind == rhs.ind && cm0 == rhs.cm0 && cm1 == rhs.cm1);
+	}
+} ;
+
 class haplotype_set {
 public:
-	//DATA
+	//Haplotype Data
+	bitmatrix H_opt_hap;		// Bit matrix of haplotypes (haplotype first). Transposed version of H_opt_var.
+	bitmatrix H_opt_var;		// Bit matrix of haplotypes (variant first). Transposed version of H_opt_hap.
 	unsigned long n_site;		// #variants
 	unsigned long n_hap;		// #haplotypes
 	unsigned long n_ind;		// #individuals
-	unsigned long n_save;		// #variants with PBWT indexes stored
-	unsigned long mod;			// Modulo used to store PBWT indexes
-	unsigned long depth;		// #neighbours in the PBWT to use for conditioning (--pbwt-depth)
-	unsigned long lengthIBD2;	// Minimal length of IBD2 tracks for IBD2 protection
-	bitmatrix H_opt_hap;		// Bit matrix of haplotypes (haplotype first)
-	bitmatrix H_opt_var;		// Bit matrix of haplotypes (variant first). Transposed version of H_opt_hap
-	vector < int > abs_indexes, rel_indexes;	//Variant indexing for stored PBWT indexes
-	vector < int > curr_clusters, dist_clusters, save_clusters;
 
-	//IBD2
-	vector < vector < bool > > flagIBD2;				//IBD2 constrains on the copying process, binary form
-	vector < vector < pair < int, int > > > idxIBD2;	//IBD2 constrains on the copying process, index form
+	//PBWT parameters
+	double pbwt_modulo;		// Modulo used to store PBWT indexes (--pbwt-modulo)
+	unsigned long pbwt_depth;		// #neighbours in the PBWT to use for conditioning (--pbwt-depth)
+	unsigned long pbwt_mac;			// Minor Allele Count to consider in PBWT pass (--pbwt-mac)
+	double pbwt_mdr;				// Missinga Data Rate to consider in PBWT pass (--pbwt-mdr)
+	unsigned int nthreads;			// Number of threads (--thread)
+
+	//PBWT indexes & arrays
+	unsigned long pbwt_nstored;		//#variants with PBWT indexes stored
+	vector < double > pbwt_cm;		//Variants at which PBWT is evaluated
+	vector < int > pbwt_grp;		//Variant groups based on cm positions
+	vector < int > pbwt_evaluated;	//Variants at which PBWT is evaluated
+	vector < int > pbwt_stored;		//Variants at which PBWT is stored
+	vector < int > pbwt_parray;		//PBWT prefix array
+	vector < int > pbwt_darray;		//PBWT divergence array
+	vector < int > pbwt_neighbours; //Closest neighbours
+
+	//PBWT IBD2 protect
+	vector < vector < IBD2track > > bannedPairs;
 
 	//CONSTRUCTOR/DESTRUCTOR/INITIALIZATION
 	haplotype_set();
 	~haplotype_set();
+	void clear();
 
-	//ROUTINES
-	void allocate(variant_map &, int, int);
-	void update(genotype_set & G, bool first_time = false);
-	void select();
-	void transposeH2V(bool full);								//Transpose Haplotype bit matrixes
-	void transposeV2H(bool full);								//Transpose Haplotype bit matrixes
-	void transposeC2H();
-	void updateMapping();
+	//PBWT routines
+	void parametrizePBWT(int, double, int, double, int);
+	void initializePBWTmapping(variant_map &);
+	void updatePBWTmapping();
+	void allocatePBWTarrays();
+	void selectPBWTarrays();
+	void transposePBWTarrays();
 
-	void searchIBD2(int);
-	bool banned(int, int, int);
+	//IBD2 routines
+	void searchIBD2matching(variant_map &, double, double);
+	bool checkIBD2matching(int, int, double);
+
+	//Haplotype routines
+	void updateHaplotypes(genotype_set & G, bool first_time = false);
+	void transposeHaplotypes_H2V(bool full);
+	void transposeHaplotypes_V2H(bool full);
 };
 
 inline
-bool haplotype_set::banned(int b, int _i0, int _i1) {
-	int i0 = min(_i0, _i1);
-	int i1 = max(_i0, _i1);
-	for (int c = 0 ; c < idxIBD2[b].size() ; c++) if (idxIBD2[b][c].first == i0 && idxIBD2[b][c].second == i1) return true;
-	return false;
+bool haplotype_set::checkIBD2matching(int mh, int ch, double pos) {
+	int mi = min(mh/2,ch/2);
+	int ci = max(mh/2,ch/2);
+	// Prevents self copying
+	if (mi == ci) return false;
+	// Prevents copying for IBD=2 individuals
+	for (int i = 0 ; i < bannedPairs[mi].size() && bannedPairs[mi][i].ind <= ci; i ++)
+		if (bannedPairs[mi][i].ind==ci && bannedPairs[mi][i].cm0<=pos && bannedPairs[mi][i].cm1>=pos) return false;
+	return true;
 }
 
 #endif

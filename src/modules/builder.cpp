@@ -22,7 +22,6 @@
 
 #include <modules/builder.h>
 
-
 builder::builder(genotype_set & _G, int n_thread): G(_G) {
 	this->n_thread = n_thread;
 	if (n_thread > 1) {

@@ -31,8 +31,8 @@ void phaser::write_files_and_finalise() {
 
 	//
 	G.solve();
-	H.update(G);
-	H.transposeH2V(false);
+	H.updateHaplotypes(G);
+	H.transposeHaplotypes_H2V(false);
 
 	//step1: writing best guess haplotypes in VCF/BCF file
 	haplotype_writer(H, G, V).writeHaplotypes(options["output"].as < string > ());

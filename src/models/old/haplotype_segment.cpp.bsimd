@@ -31,19 +31,19 @@ haplotype_segment::haplotype_segment(genotype * _G, bitmatrix & _H, vector < uns
 	ambiguous_last = C.stop_ambiguous;
 	transition_first = C.start_transition;
 	n_cond_haps = idxH.size();
-	prob1 = aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 1.0);
-	prob2 = aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 1.0);
-	probSumH1 = aligned_vector32 < float > (HAP_NUMBER, 1.0);
-	probSumH2 = aligned_vector32 < float > (HAP_NUMBER, 1.0);
-	probSumK1 = aligned_vector32 < float > (n_cond_haps, 1.0);
-	probSumK2 = aligned_vector32 < float > (n_cond_haps, 1.0);
+	prob1 = vector < float > (HAP_NUMBER * n_cond_haps, 1.0);
+	prob2 = vector < float > (HAP_NUMBER * n_cond_haps, 1.0);
+	probSumH1 = vector < float > (HAP_NUMBER, 1.0);
+	probSumH2 = vector < float > (HAP_NUMBER, 1.0);
+	probSumK1 = vector < float > (n_cond_haps, 1.0);
+	probSumK2 = vector < float > (n_cond_haps, 1.0);
 	probSumT1 = 1.0;
 	probSumT2 = 1.0;
-	Alpha = vector < aligned_vector32 < float > > (segment_last - segment_first + 1, aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 0.0));
-	Beta = vector < aligned_vector32 < float > > (segment_last - segment_first + 1, aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 0.0));
-	AlphaSum = vector < aligned_vector32 < float > > (segment_last - segment_first + 1, aligned_vector32 < float > (HAP_NUMBER, 0.0));
-	AlphaSumSum = aligned_vector32 < float > (segment_last - segment_first + 1, 0.0);
-	BetaSum = aligned_vector32 < float > (HAP_NUMBER, 0.0);
+	Alpha = vector < vector < float > > (segment_last - segment_first + 1, vector < float > (HAP_NUMBER * n_cond_haps, 0.0));
+	Beta = vector < vector < float > > (segment_last - segment_first + 1, vector < float > (HAP_NUMBER * n_cond_haps, 0.0));
+	AlphaSum = vector < vector < float > > (segment_last - segment_first + 1, vector < float > (HAP_NUMBER, 0.0));
+	AlphaSumSum = vector < float > (segment_last - segment_first + 1, 0.0);
+	BetaSum = vector < float > (HAP_NUMBER, 0.0);
 }
 
 haplotype_segment::~haplotype_segment() {
@@ -84,21 +84,21 @@ void haplotype_segment::forward() {
 	curr_abs_ambiguous = ambiguous_first;
 	for (curr_abs_locus = locus_first ; curr_abs_locus <= locus_last ; curr_abs_locus++) {
 		curr_rel_locus = curr_abs_locus - locus_first;
+		//bool scale = (curr_rel_locus % HAP_SCALE == 0);
 		bool paired = (curr_rel_locus % 2 == 0);
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 
-		if (amb) AMB(paired);
-		else HOM(paired);
+		if (amb) paired?AMB2():AMB1();
+		else paired?HOM2():HOM1();
 		if (curr_rel_locus != 0) {
-			if (curr_segment_locus == 0) COLLAPSE(true, paired);
-			else RUN(true, paired);
+			if (curr_segment_locus == 0) paired?COLLAPSE2(true):COLLAPSE1(true);
+			else paired?RUN2(true):RUN1(true);
 		}
-		SUM(paired);
-		if (curr_segment_locus == (G->Lengths[curr_segment_index] - 1)) SUMK(paired);
+		paired?SUM2():SUM1();
+		if (curr_segment_locus == (G->Lengths[curr_segment_index] - 1)) paired?SUMK2():SUMK1();
+		//if (scale) paired?SCALE2():SCALE1();
 		if (curr_segment_locus == G->Lengths[curr_segment_index] - 1) {
-			//if (paired) copy(prob2.begin(), prob2.end(), Alpha[curr_segment_index - segment_first].begin());
-			//else copy(prob1.begin(), prob1.end(), Alpha[curr_segment_index - segment_first].begin());
-			Alpha[curr_segment_index - segment_first] = (paired?prob2:prob1);		//does not compile with aligned vectors (needs to define operator = from std vector)
+			Alpha[curr_segment_index - segment_first] = (paired?prob2:prob1);
 			AlphaSum[curr_segment_index - segment_first] = (paired?probSumH2:probSumH1);
 			AlphaSumSum[curr_segment_index - segment_first] = (paired?probSumT2:probSumT1);
 		}
@@ -117,21 +117,19 @@ void haplotype_segment::backward() {
 	curr_abs_ambiguous = ambiguous_last;
 	for (curr_abs_locus = locus_last ; curr_abs_locus >= locus_first ; curr_abs_locus--) {
 		curr_rel_locus = curr_abs_locus - locus_first;
+		//bool scale = (curr_rel_locus % HAP_SCALE == 0);
 		bool paired = (curr_rel_locus % 2 == 0);
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
-		if (amb) AMB(paired);
-		else HOM(paired);
+		if (amb) paired?AMB2():AMB1();
+		else paired?HOM2():HOM1();
 		if (curr_abs_locus != locus_last) {
-			if (curr_segment_locus == G->Lengths[curr_segment_index] - 1) COLLAPSE(false, paired);
-			else RUN(false, paired);
+			if (curr_segment_locus == G->Lengths[curr_segment_index] - 1) paired?COLLAPSE2(false):COLLAPSE1(false);
+			else paired?RUN2(false):RUN1(false);
 		}
-		SUM(paired);
-		if (curr_segment_locus == 0) SUMK(paired);
-		if (curr_segment_locus == 0 && curr_abs_locus != locus_first) {
-			Beta[curr_segment_index - segment_first] = (paired?prob2:prob1);	//does not compile with aligned vectors (needs to define operator = from std vector)
-			//if (paired) copy(prob2.begin(), prob2.end(), Beta[curr_segment_index - segment_first].begin());
-			//else copy(prob1.begin(), prob1.end(), Beta[curr_segment_index - segment_first].begin());
-		}
+		paired?SUM2():SUM1();
+		if (curr_segment_locus == 0) paired?SUMK2():SUMK1();
+		//if (scale) paired?SCALE2():SCALE1();
+		if (curr_segment_locus == 0 && curr_abs_locus != locus_first) Beta[curr_segment_index - segment_first] = (paired?prob2:prob1);
 		if (curr_abs_locus == 0) BetaSum=(paired?probSumH2:probSumH1);
 		curr_segment_locus--;
 		curr_abs_ambiguous -= amb;

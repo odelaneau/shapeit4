@@ -41,18 +41,19 @@ void phaser::declare_options() {
 	bpo::options_description opt_mcmc ("MCMC parameters");
 	opt_mcmc.add_options()
 			("mcmc-iterations", bpo::value<string>()->default_value("5b,1p,1b,1p,1b,1p,5m"), "Iteration scheme of the MCMC")
-			("mcmc-prune", bpo::value<double>()->default_value(0.999), "Pruning threshold")
-			("mcmc-store-K", bpo::value<string>(), "Store K sizes in last iterations");
+			("mcmc-prune", bpo::value<double>()->default_value(0.999), "Pruning threshold in genotype graphs");
 
 	bpo::options_description opt_pbwt ("PBWT parameters");
 	opt_pbwt.add_options()
-			("pbwt-disable-init", "Do not initialise haplotypes by PBWT (rephase input haplotype data)")
-			("pbwt-modulo", bpo::value<int>()->default_value(8), "Storage frequency of PBWT indexes in variant numbers (i.e. 16 means storage every 16 variants)")
-			("pbwt-depth", bpo::value<int>()->default_value(4), "Depth of PBWT indexes to condition on");
+			("pbwt-modulo", bpo::value< double >()->default_value(0.025), "Storage frequency of PBWT indexes in cM (i.e. 0.025 means storage every 0.025 cM)")
+			("pbwt-depth", bpo::value< int >()->default_value(4), "Depth of PBWT indexes to condition on")
+			("pbwt-mac", bpo::value< int >()->default_value(2), "Minimal Minor Allele Count at which PBWT is evaluated")
+			("pbwt-mdr", bpo::value< double >()->default_value(0.05), "Maximal Missing Data Rate at which PBWT is evaluated");
 	
 	bpo::options_description opt_hmm ("HMM parameters");
 	opt_hmm.add_options()
-			("window,W", bpo::value<double>()->default_value(2e6), "Minimal size of the phasing window")
+			("window,W", bpo::value<double>()->default_value(2.5), "Minimal size of the phasing window in cM")
+			("ibd2", bpo::value<double>()->default_value(2.5), "Minimal size of IBD2 tracks for building copying constraints")
 			("effective-size", bpo::value<int>()->default_value(15000), "Effective size of the population");
 
 	bpo::options_description opt_output ("Output files");
@@ -77,7 +78,7 @@ void phaser::parse_command_line(vector < string > & args) {
 	vrb.title("SHAPEIT");
 	vrb.bullet("Author        : Olivier DELANEAU, University of Lausanne");
 	vrb.bullet("Contact       : olivier.delaneau@gmail.com");
-	vrb.bullet("Version       : 4.0.0");
+	vrb.bullet("Version       : 4.1.0");
 	vrb.bullet("Run date      : " + tac.date());
 }
 
@@ -91,9 +92,6 @@ void phaser::check_options() {
 	if (!options.count("output"))
 		vrb.error("You must specify a phased output file with --output");
 
-	if (!options.count("map"))
-		vrb.error("You must specify a genetic map file with --map");
-
 	if (options.count("seed") && options["seed"].as < int > () < 0)
 		vrb.error("Random number generator needs a positive seed value");
 
@@ -106,8 +104,8 @@ void phaser::check_options() {
 	if (!options["effective-size"].defaulted() && options["effective-size"].as < int > () < 1)
 		vrb.error("You must specify a positive effective size");
 
-	if (!options["window"].defaulted() && options["window"].as < double > () < 1e5)
-		vrb.error("You must specify a window size of at least 0.1 Mb");
+	if (!options["window"].defaulted() && (options["window"].as < double > () < 0.5 || options["window"].as < double > () > 10))
+		vrb.error("You must specify a window size comprised between 0.5 and 10 cM");
 
 	parse_iteration_scheme(options["mcmc-iterations"].as < string > ());
 }
@@ -117,7 +115,7 @@ void phaser::verbose_files() {
 	vrb.bullet("Input VCF     : [" + options["input"].as < string > () + "]");
 	if (options.count("reference")) vrb.bullet("Reference VCF : [" + options["reference"].as < string > () + "]");
 	if (options.count("scaffold")) vrb.bullet("Scaffold VCF  : [" + options["scaffold"].as < string > () + "]");
-	vrb.bullet("Genetic Map   : [" + options["map"].as < string > () + "]");
+	if (options.count("map")) vrb.bullet("Genetic Map   : [" + options["map"].as < string > () + "]");
 	vrb.bullet("Output VCF    : [" + options["output"].as < string > () + "]");
 	if (options.count("log")) vrb.bullet("Output LOG    : [" + options["log"].as < string > () + "]");
 }
@@ -127,9 +125,16 @@ void phaser::verbose_options() {
 	vrb.bullet("Seed    : " + stb.str(options["seed"].as < int > ()));
 	vrb.bullet("Threads : " + stb.str(options["thread"].as < int > ()) + " threads");
 	vrb.bullet("MCMC    : " + get_iteration_scheme());
-	if (options.count("pbwt-disable-init")) vrb.bullet("PBWT    : No PBWT initialization");
-	vrb.bullet("PBWT    : Store indexes every " + stb.str(options["pbwt-modulo"].as < int > ()) + " variants");
 	vrb.bullet("PBWT    : Depth of PBWT neighbours to condition on: " + stb.str(options["pbwt-depth"].as < int > ()));
-	vrb.bullet("HMM     : K is variable / min W is " + stb.str(options["window"].as < double > ()/1e6, 2) + "Mb / Ne is "+ stb.str(options["effective-size"].as < int > ()));
+	vrb.bullet("PBWT    : Store indexes at variants [MAC>=" + stb.str(options["pbwt-mac"].as < int > ()) + " / MDR<=" + stb.str(options["pbwt-mdr"].as < double > ()) + " / Dist=" + stb.str(options["pbwt-modulo"].as < double > ()) + " cM]");
+	vrb.bullet("HMM     : K is variable / min W is " + stb.str(options["window"].as < double > (), 2) + "cM / Ne is "+ stb.str(options["effective-size"].as < int > ()));
+	if (options.count("map")) vrb.bullet("HMM     : Recombination rates given by genetic map");
+	else vrb.bullet("HMM     : Constant recombination rate of 1cM per Mb");
 	if (options.count("use-PS")) vrb.bullet("HMM     : Inform phasing using VCF/PS field / Error rate of PS field is " + stb.str(options["use-PS"].as < double > ()));
+#ifdef __AVX2__
+	vrb.bullet("HMM     : AVX2 optimization active");
+#else
+	vrb.bullet("HMM     : AVX2 optimization inactive");
+#endif
+
 }

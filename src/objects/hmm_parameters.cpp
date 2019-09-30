@@ -30,21 +30,16 @@ hmm_parameters::hmm_parameters() {
 hmm_parameters::~hmm_parameters() {
 	t.clear();
 	nt.clear();
-	tfreq.clear();
 }
 
-void hmm_parameters::initialise(variant_map & mapG, int Neff, int Nhap, int Nstate, bool gmap) {
-	t = vector < double > (mapG.size() - 1, 0.0);
-	nt = vector < double > (mapG.size() - 1, 0.0);
-	tfreq = vector < double > (mapG.size() - 1, 0.0);
-	for (int l = 1 ; l < mapG.size() ; l ++) {
-		double rho;
-		if (gmap) rho = 0.04 * Neff * (mapG.vec_pos[l]->cm - mapG.vec_pos[l-1]->cm);
-		else 0.0004 *  (mapG.vec_pos[l]->bp - mapG.vec_pos[l-1]->bp);
-		if (rho == 0.0) rho = 0.00001;
-		nt[l-1] = exp(-1.0 * rho / Nhap);
-		t[l-1] = 1-nt[l-1];
-		tfreq[l-1] = t[l-1] * 1.0 / Nstate;
+void hmm_parameters::initialise(variant_map & V, int Neff, int Nhap) {
+	t = vector < double > (V.size() - 1, 0.0);
+	nt = vector < double > (V.size() - 1, 0.0);
+	for (int l = 1 ; l < V.size() ; l ++) {
+		double dist_cm = V.vec_pos[l]->cm - V.vec_pos[l-1]->cm;
+		if (dist_cm <= 0) dist_cm = 0.00001;
+		t[l-1] = -1.0 * expm1(-0.04 * Neff * dist_cm / Nhap);
+		nt[l-1] = 1-t[l-1];
 	}
 }
 

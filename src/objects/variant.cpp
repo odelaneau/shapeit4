@@ -43,6 +43,10 @@ unsigned int variant::getMAC() {
 	return min(cref, calt);
 }
 
+double variant::getMDR() {
+	return cmis * 1.0 / (cref + calt + cmis);
+}
+
 bool variant::isSingleton() {
 	return (calt == 1 || cref == 1);
 }

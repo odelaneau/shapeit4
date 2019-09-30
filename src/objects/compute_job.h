@@ -79,6 +79,7 @@ public:
 	void make(unsigned int, double);
 	unsigned int size();
 	void maskingTransitions(unsigned int, double);
+	bool reccursive_window_splitting(double, int, int, vector < int > &, vector < int > &, vector < double > &, vector < double > &, vector < int > &);
 };
 
 inline

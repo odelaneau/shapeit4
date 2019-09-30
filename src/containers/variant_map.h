@@ -43,6 +43,7 @@ public :
 	variant * getByIndex(int);
 	void push(variant *);
 	void setGeneticMap(gmap_reader&);
+	void setGeneticMap();
 	int setCentiMorgan(vector < int > & pos_bp, vector < double > & pos_cM);
 	int interpolateCentiMorgan(vector < int > & pos_bp, vector < double > & pos_cM);
 	unsigned int length();

@@ -21,8 +21,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <objects/genotype/genotype_header.h>
 
-// TO DO: make it forward-backward
 void genotype::sample(vector < double > & CurrentTransProbabilities) {
+	if (rng.getDouble() < 0.5) sampleForward(CurrentTransProbabilities);
+	else sampleBackward(CurrentTransProbabilities);
+}
+
+void genotype::sampleForward(vector < double > & CurrentTransProbabilities) {
 	double sumProbs = 0.0;
 	unsigned int prev_sampled = 0;
 	unsigned int curr_dipcount = 0, prev_dipcount = 1;
@@ -38,6 +42,41 @@ void genotype::sample(vector < double > & CurrentTransProbabilities) {
 		DipSampled[s] = curr_dipcodes[prev_sampled];
 		toffset += prev_dipcount * curr_dipcount;
 		prev_dipcount = curr_dipcount;
+	}
+	make(DipSampled);
+}
+
+void genotype::sampleBackward(vector < double > & CurrentTransProbabilities) {
+
+	double sumProbs = 0.0;
+	int next_sampled = -1;
+	unsigned int curr_dipcount = 0, next_dipcount = countDiplotypes(Diplotypes[n_segments - 1]);
+	vector < double > currProbs = vector < double > (64 * 64, 0.0);
+	vector < unsigned char > DipSampled = vector < unsigned char >(n_segments, 0);
+
+	for (int s = n_segments - 2, toffset = n_transitions ; s >= 0 ; s --) {
+		sumProbs = 0.0;
+		curr_dipcount = countDiplotypes(Diplotypes[s]);
+		toffset -= next_dipcount * curr_dipcount;
+
+		if (next_sampled >= 0) {
+			currProbs.resize(64);
+			for (unsigned int tabs = toffset+next_sampled, trel = 0 ; trel < curr_dipcount ; ++trel, tabs += next_dipcount)
+				sumProbs += (currProbs[trel] = CurrentTransProbabilities[tabs]);
+			next_sampled = rng.sample(currProbs, sumProbs);
+			makeDiplotypes(Diplotypes[s]);
+			DipSampled[s] = curr_dipcodes[next_sampled];
+		} else {
+			for (unsigned int tabs = toffset, trel = 0 ; tabs < n_transitions ; ++trel, ++tabs)
+				sumProbs += (currProbs[trel] = CurrentTransProbabilities[tabs]);
+			next_sampled = rng.sample(currProbs, sumProbs);
+			makeDiplotypes(Diplotypes[s+1]);
+			DipSampled[s+1] = curr_dipcodes[next_sampled % next_dipcount];
+			makeDiplotypes(Diplotypes[s]);
+			next_sampled = next_sampled / next_dipcount;
+			DipSampled[s] = curr_dipcodes[next_sampled];
+		}
+		next_dipcount = curr_dipcount;
 	}
 	make(DipSampled);
 }
@@ -81,7 +120,7 @@ void genotype::solve() {
 }
 
 void genotype::store(vector < double > & CurrentTransProbabilities) {
-        if (ProbMask.size() == 0) {
+	if (ProbMask.size() == 0) {
 		unsigned int countProb = 0;
 		ProbMask = vector < bool > (n_transitions, false);
 		for (unsigned int t = 0 ; t < n_transitions ; t ++) if (CurrentTransProbabilities[t] >= 1e-6) {

@@ -45,7 +45,6 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 		if (options["thread"].as < int > () > 1) pthread_mutex_lock(&mutex_workers);
 		statH.push(threadData[id_worker].Kvec[w].size()*1.0);
 		statS.push((V.vec_pos[threadData[id_worker].C[w].stop_locus]->bp - V.vec_pos[threadData[id_worker].C[w].start_locus]->bp + 1) * 1.0 / 1e6);
-		if (options.count("mcmc-store-K")) storedKsizes.push_back(threadData[id_worker].Kvec[w].size()*1.0);
 		if (options["thread"].as < int > () > 1) pthread_mutex_unlock(&mutex_workers);
 		assert(threadData[id_worker].Kvec[w].size()>0);
 
@@ -98,24 +97,16 @@ void phaser::phase() {
 			case STAGE_PRUN:	vrb.title("Pruning iteration [" + stb.str(iter+1) + "/" + stb.str(iteration_counts[iteration_stage]) + "]"); break;
 			case STAGE_MAIN:	vrb.title("Main iteration [" + stb.str(iter+1) + "/" + stb.str(iteration_counts[iteration_stage]) + "]"); break;
 			}
-			H.transposeV2H(false);
-			H.select();
-			H.transposeC2H();
+			H.transposeHaplotypes_V2H(false);
+			H.updatePBWTmapping();
+			H.selectPBWTarrays();
+			H.transposePBWTarrays();
 			phaseWindow();
-			if (options.count("mcmc-store-K")) {
-				string filename = options["mcmc-store-K"].as < string > () + stb.str(current_iteration) + ".txt.gz";
-				output_file outputK(filename);
-				for (int e = 0 ; e < storedKsizes.size() ; e++) outputK << storedKsizes[e] << endl;
-				outputK.close();
-				current_iteration++;
-			}
-
-			H.update(G);
-			H.transposeH2V(false);
+			H.updateHaplotypes(G);
+			H.transposeHaplotypes_H2V(false);
 			if (iteration_types[iteration_stage] == STAGE_PRUN) {
 				n_new_segments = G.numberOfSegments();
-				//vrb.bullet("Pruning info [old=" + stb.str(n_old_segments) + " / new=" + stb.str(n_new_segments) + " / compression=" + stb.str((1-n_new_segments*1.0/n_old_segments)*100, 2) + "%]");
-				vrb.bullet("Pruning outcome [compression=" + stb.str((1-n_new_segments*1.0/n_old_segments)*100, 2) + "%]");
+				vrb.bullet("Trimming [pc=" + stb.str((1-n_new_segments*1.0/n_old_segments)*100, 2) + "%]");
 				if (options.count("use-PS")) G.masking();
 			}
 		}

@@ -61,6 +61,22 @@
 	</div>
 </section>
 
+<!-- Section VERSIONS -->
+<section id="version" class="sections lightbg">
+	<div class="container">
+		<h1>Versions</h1>
+		<div class="separator"></div>
+		<p><b>Version 4.1</b>: Second release. Contains the following changes compared to previous version:</p>
+		<ul>
+			<li>Bug correction on the detection of IBD2 segments. The previous function was not working in some cases involving increased switch errors rates for duplicates, twins and siblings.</li>
+			<li>All windowing/chunking is now done on the basis on cM distances and not anymore on Mb distances. This improves the accuracy for low density SNP arrays.</li>
+			<li>Usage of single-precision floating-point numbers and not anymore double-precisions. This increases speed.</li>
+			<li>Explicit usage of AVX2 capabilities of modern CPUs. The most computationally demanding HMM routines have been re-written using AVX2 intel intrinsincs functions. This increases speed.</li>  
+		</ul>    
+		<p><b>Version 4.0</b>: First release.</p>
+	</div>
+</section>
+
 <!-- Section INSTALLATION -->
 <section id="installation" class="sections">
     <div class="container">
