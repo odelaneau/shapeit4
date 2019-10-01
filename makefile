@@ -11,7 +11,6 @@ BOOST_LIB_IO=/usr/lib/x86_64-linux-gnu/libboost_iostreams.a
 BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 
 #COMPILER & LINKER FLAGS
-#CXXFLAG=-O3 -march=native
 CXXFLAG=-O3 -march=native
 LDFLAG=-O3
 

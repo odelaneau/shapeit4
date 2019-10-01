@@ -69,7 +69,9 @@
 		<p><b>Version 4.1</b>: Second release. Contains the following changes compared to previous version:</p>
 		<ul>
 			<li>Bug correction on the detection of IBD2 segments. The previous function was not working in some cases involving increased switch errors rates for duplicates, twins and siblings.</li>
-			<li>All windowing/chunking is now done on the basis on cM distances and not anymore on Mb distances. This improves the accuracy for low density SNP arrays.</li>
+			<li>Better genetic map interpolation, i.e. way faster.</li>
+			<li>All windowing/chunking is now done on the basis on cM distances and not anymore on Mb distances (option --window and --pbwt-modulo). This improves the accuracy for low density SNP arrays.</li>
+			<li>Addition of two new options to control the PBWT array storage (<code>--pbwt-mac</code> and <code>--pbwt-mdr</code>). See documentation. 
 			<li>Usage of single-precision floating-point numbers and not anymore double-precisions. This increases speed.</li>
 			<li>Explicit usage of AVX2 capabilities of modern CPUs. The most computationally demanding HMM routines have been re-written using AVX2 intel intrinsincs functions. This increases speed.</li>  
 		</ul>    
@@ -86,6 +88,10 @@
             <div class="separator"></div>
         </div>
         <div class="row">
+        <p><b>Important:</b> We strongly recommend to compile the SHAPEIT4 code on the same machine it will be run. This can drastically increase performance.
+        In addition, we also recommend to run SHAPEIT4 on CPUs that support AVX2 instruction set as we heavily optimized the SHAPEIT4 code in that direction.
+        Of note, AVX2 is often available for CPUs from 2012+. This can be checked using <b>cat /proc/cpuinfo</b>.</p>
+                
 		<p>Make sure that the two following libraries are installed on your system:</p>
 		<ol>
 			<li><a href="http://www.htslib.org/">HTSlib</a>: A great C library for reading/writing high-throughput sequencing data.</li>
@@ -178,17 +184,28 @@
 		</ul>
 		<p>By default, the sequence used by SHAPEIT4 is <code>5b,1p,1b,1p,1b,1p,5m</code>. It provided a good trade-off between speed and accuracy in our experiments. If running time is not an issue, you may consider increasing the number of iterations using <code>--mcmc-iterations 10b,1p,1b,1p,1b,1p,1b,1p,10m</code> for instance.</p>
 		
-		<h2>6. Tuning the PBWT based selection</h2>
+		<h2>6a. Tuning the PBWT based selection on v4.0</h2>
 		<p>Reducing the number of conditioning neighbours in the PBWT can be achieved using the <code>--pbwt-depth</code> option. The default value is 4. Decreasing it results in faster runs at the cost of some accuracy.</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-depth 2</b></code>
 		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The default value is 8. Decreasing this results in more memory usage.</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-modulo 16</b></code>
 		<p>You can also change the size of the genomic window into which phasing is carried out using the option <code>--window</code>. The default value is 2e6 base pairs (i.e. 2Mb). Increasing it results in more conditioning haplotypes being used and therefore increased running times. It is preferable to use <code>--pbwt-depth</code> instead of <code>--window</code> to increase the number of conditioning haplotypes in order to increase accuracy. Anyway, this can be done as follows:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--window 5e6</b></code>
+		
+		<h2>6b. Tuning the PBWT based selection on v4.1</h2>
+		<p>Reducing the number of conditioning neighbours in the PBWT can be achieved using the <code>--pbwt-depth</code> option. The default value is 4. Decreasing it results in faster runs at the cost of some accuracy. Conversely, increasing it to 8 for instance can lead to better accuracy:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-depth 8</b></code>
+		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The way this option works differs from v4.0. Now variants at which PWT arrays are stored depend on cM distances between them. This distance is given by <code>--pbwt-modulo</code>. The default is 0.025cM, i.e. PBWT storage happens every 0.025cM. Decreasing this distance leads to lower memory usage. </p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-modulo 0.05</b></code>
+		<p>Some variants can also be ignored when storing PBWT indexes based on (i) their Minor Allele Count (<code>--pbwt-mac</code>) and/or (ii) Missing Data Rate (<code>--pbwt-mdr</code>). Defaults are (i) MAC>=2 and (ii) MDR <= 0.05. This can be changed as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-mac 5 --pbwt-mdr 0.10</b></code>
+		<p>You can also change the size of the genomic window into which phasing is carried out using the option <code>--window</code>. The way this option works differs from v4.0. Now the size of the window is based n cM and not anymore on Mb. The default value is 2.5cM. Increasing it results in more conditioning haplotypes being used and therefore increased running times. It is preferable to use <code>--pbwt-depth</code> instead of <code>--window</code> to increase the number of conditioning haplotypes in order to increase accuracy. Anyway, this can be done as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--window 5</b></code>		
  
 		<h2>7. Specifying initial estimates</h2>
 		<p>By default, SHAPEIT4 uses a quick PBWT based algorithm to initialize the haplotypes. This can be disabled using <code>--pbwt-disable-init</code>. This is particularly useful if you want to specify your own starting point for the MCMC or if you want to refine some haplotypes you estimated in the past. Initial haplotype estimates are specified in the input VCF/BCF using the option <code>--input</code> and phased genotypes, e.g. <code>0|1</code>. Example command line:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-disable-init</b></code>
+		<p>Of note, this option is not available in v4.1</p>
 
 		<h2>8. Reproducibility</h2>
 		<p>Making reproducible runs can sometimes be useful. To do so, you need to specify the random generator seed using <code>--seed</code> and to use a single thread. Using multi-threading prevents reproducibility.</p>
@@ -280,7 +297,7 @@
 				<td><code>--map</code></td>
 				<td><code>-M</code></td>
 				<td>STRING</td>
-				<td>Genetic map.</td>
+				<td>Genetic map. Mandatory in v4.0. In v4.1, constant rate of 1cM per Mb is assumed when the map is omitted.</td>
 			</tr>
 			<tr>
 				<td><code>--region</code></td>
@@ -304,13 +321,7 @@
 				<td><code>--pbwt-disable-init</code></td>
 				<td>NA</td>
 				<td>NA</td>
-				<td>Do not initialise haplotypes by PBWT (rephase input haplotype data).</td>
-			</tr>
-			<tr>
-				<td><code>--pbwt-modulo</code></td>
-				<td>NA</td>
-				<td>INT</td>
-				<td>Storage frequency of PBWT indexes in variant numbers. Default is 8 (i.e. storage every 8 variants).</td>
+				<td>Do not initialise haplotypes by PBWT (rephase input haplotype data). Only available in v4.0.</td>
 			</tr>
 			<tr>
 				<td><code>--pbwt-depth</code></td>
@@ -319,10 +330,28 @@
 				<td>Depth of PBWT indexes to condition on. Default is 4.</td>
 			</tr>
 			<tr>
+				<td><code>--pbwt-modulo</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td><b>v4.0:</b> Storage frequency of PBWT indexes in variant numbers. Default is 8 (i.e. storage every 8 variants). <b>v4.1:</b> Storage frequency of PBWT indexes in cM. Default is 0.025 (i.e. storage every 0.025 cM).</td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-mac</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td>New in <b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Minor Allele Count. Default is 2, this excludes singletons and monomorphic sites. </td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-mdr</code></td>
+				<td>NA</td>
+				<td>FLOAT</td>
+				<td>New in <b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Missing Data Rate. Default is 0.05 (5%), this excludes sites with more than 5% missing data. </td>
+			</tr>
+			<tr>
 				<td><code>--window</code></td>
 				<td>NA</td>
 				<td>FLOAT</td>
-				<td>Minimal size of the phasing window. Default is 2Mb (i.e. 2e6).</td>
+				<td>Minimal size of the phasing window. <b>v4.0:</b> Default is 2Mb (i.e. 2e6). <b>v4.1:</b> Default is 2.5cM.</td>
 			</tr>
 			<tr>
 				<td><code>--output</code></td>
