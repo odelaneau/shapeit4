@@ -88,9 +88,12 @@
             <div class="separator"></div>
         </div>
         <div class="row">
-        <p><b>Important:</b> We strongly recommend to compile the SHAPEIT4 code on the same machine it will be run. This can drastically increase performance.
-        In addition, we also recommend to run SHAPEIT4 on CPUs that support AVX2 instruction set as we heavily optimized the SHAPEIT4 code in that direction.
-        Of note, AVX2 is often available for CPUs from 2012+. This can be checked using <b>cat /proc/cpuinfo</b>.</p>
+        <p><b>Important notes before starting:</b></p>
+        <ol>
+			<li>Compile SHAPEIT4 on the same machine it will be run. This significantly increases performance.</li>
+			<li>Run preferentially SHAPEIT4 on CPUs supporting AVX2 instruction set as th code has been heavily optimized in that direction. AVX2 is usually available for CPUs from 2012+. Run <code>cat /proc/cpuinfo</code> in order to check.</li>
+			<li>Compile SHAPEIT4 using g++ version >= 5 at the very least. I personally use version v7.4.0. Compiling it using g++ v4 does not work. Run <code>g++ --version</code> in order to check. I've never tried to compile it using Intel compiler.</li>
+        </ol>
                 
 		<p>Make sure that the two following libraries are installed on your system:</p>
 		<ol>
