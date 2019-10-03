@@ -10,9 +10,21 @@ BOOST_INC=/usr/include
 BOOST_LIB_IO=/usr/lib/x86_64-linux-gnu/libboost_iostreams.a
 BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 
+#HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
+#HTSLIB_INC=/software/UHTS/Analysis/samtools/1.4/include
+#HTSLIB_LIB=/software/UHTS/Analysis/samtools/1.4/lib64/libhts.a
+
+#BOOST IOSTREAM & PROGRAM_OPTION LIBRARIES [SPECIFY YOUR OWN PATHS]
+#BOOST_INC=/software/include
+#BOOST_LIB_IO=/software/lib64/libboost_iostreams.a
+#BOOST_LIB_PO=/software/lib64/libboost_program_options.a
+
 #COMPILER & LINKER FLAGS
-CXXFLAG=-O3 -march=native
-LDFLAG=-O3
+#CXXFLAG=-O3 -march=native		#Best performance is achieved with this. Use it if running on the same plateform you're compiling!
+CXXFLAG=-O3 -mavx2 -mfma		#Good performance and portable on most intel
+#CXXFLAG=-O3 					#Portable version without avx2 (slower)
+
+LDFLAG=-O3						
 
 #DYNAMIC LIBRARIES
 DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
