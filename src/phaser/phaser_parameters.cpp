@@ -48,12 +48,18 @@ void phaser::declare_options() {
 			("pbwt-modulo", bpo::value< double >()->default_value(0.025), "Storage frequency of PBWT indexes in cM (i.e. 0.025 means storage every 0.025 cM)")
 			("pbwt-depth", bpo::value< int >()->default_value(4), "Depth of PBWT indexes to condition on")
 			("pbwt-mac", bpo::value< int >()->default_value(2), "Minimal Minor Allele Count at which PBWT is evaluated")
-			("pbwt-mdr", bpo::value< double >()->default_value(0.05), "Maximal Missing Data Rate at which PBWT is evaluated");
+			("pbwt-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing Data Rate at which PBWT is evaluated");
 	
+	bpo::options_description opt_ibd2 ("IBD2 parameters");
+	opt_ibd2.add_options()
+			("ibd2-length", bpo::value< double >()->default_value(2.5), "Minimal size of IBD2 tracks for building copying constraints")
+			("ibd2-maf", bpo::value< double >()->default_value(0.01), "Minimal Minor Allele Frequency for variants to be considered in the IBD2 mapping")
+			("ibd2-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
+			("ibd2-count", bpo::value< int >()->default_value(100), "Minimal number of filtered variants in IBD2 tracks");
+
 	bpo::options_description opt_hmm ("HMM parameters");
 	opt_hmm.add_options()
 			("window,W", bpo::value<double>()->default_value(2.5), "Minimal size of the phasing window in cM")
-			("ibd2", bpo::value<double>()->default_value(2.5), "Minimal size of IBD2 tracks for building copying constraints")
 			("effective-size", bpo::value<int>()->default_value(15000), "Effective size of the population");
 
 	bpo::options_description opt_output ("Output files");
@@ -61,7 +67,7 @@ void phaser::declare_options() {
 			("output,O", bpo::value< string >(), "Phased haplotypes in VCF/BCF format")
 			("log", bpo::value< string >(), "Log file");
 
-	descriptions.add(opt_base).add(opt_input).add(opt_mcmc).add(opt_pbwt).add(opt_hmm).add(opt_output);
+	descriptions.add(opt_base).add(opt_input).add(opt_mcmc).add(opt_pbwt).add(opt_ibd2).add(opt_hmm).add(opt_output);
 }
 
 void phaser::parse_command_line(vector < string > & args) {
@@ -78,7 +84,7 @@ void phaser::parse_command_line(vector < string > & args) {
 	vrb.title("SHAPEIT");
 	vrb.bullet("Author        : Olivier DELANEAU, University of Lausanne");
 	vrb.bullet("Contact       : olivier.delaneau@gmail.com");
-	vrb.bullet("Version       : 4.1.0");
+	vrb.bullet("Version       : 4.1.1");
 	vrb.bullet("Run date      : " + tac.date());
 }
 
@@ -134,7 +140,10 @@ void phaser::verbose_options() {
 #ifdef __AVX2__
 	vrb.bullet("HMM     : AVX2 optimization active");
 #else
-	vrb.bullet("HMM     : AVX2 optimization inactive");
+	vrb.bullet("HMM     : !AVX2 optimization inactive!");
 #endif
+	vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(options["ibd2-count"].as < int > ()) + " / MAF>=" + stb.str(options["ibd2-maf"].as < double > (), 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
+
+
 
 }

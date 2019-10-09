@@ -43,6 +43,11 @@ unsigned int variant::getMAC() {
 	return min(cref, calt);
 }
 
+double variant::getMAF() {
+	double freq = cref * 1.0f / (cref + calt);
+	return min(freq, 1.0f-freq);
+}
+
 double variant::getMDR() {
 	return cmis * 1.0 / (cref + calt + cmis);
 }

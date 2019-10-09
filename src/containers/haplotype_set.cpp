@@ -218,9 +218,19 @@ void haplotype_set::selectPBWTarrays() {
 }
 
 
-void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize) {
+void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count) {
 	assert(pbwt_evaluated.size() > 0);
 	tac.clock();
+
+	//
+	vector < int > ibd2_evaluated;
+	vector < double > ibd2_cm;
+	for (int l = 0 ; l < n_site ; l ++) {
+		if (V.vec_pos[l]->getMAF() >= ibd2_maf && V.vec_pos[l]->getMDR() <= ibd2_mdr) {
+			ibd2_evaluated.push_back(l);
+			ibd2_cm.push_back(V.vec_pos[l]->cm);
+		}
+	}
 
 	//
 	int M = 3;
@@ -231,14 +241,14 @@ void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack
 	vector < vector < int > > D = vector < vector < int > > (M, vector < int > (n_ind, 0));
 	bannedPairs = vector < vector < IBD2track > > (n_ind);
 
-	for (int l = 0 ; l < pbwt_evaluated.size() ; l ++) {
+	for (int l = 0 ; l < ibd2_evaluated.size() ; l ++) {
 		fill(U.begin(), U.end(), 0);
 		fill(P.begin(), P.end(), l);
 		for (int i = 0 ; i < n_ind ; i ++) {
 			int alookup = l?A[0][i]:i;
 			int dlookup = l?D[0][i]:0;
 			for (int g = 0 ; g < M ; g++) if (dlookup > P[g]) P[g] = dlookup;
-			G[i] = H_opt_var.get(pbwt_evaluated[l], 2*alookup+0) + H_opt_var.get(pbwt_evaluated[l], 2*alookup+1);
+			G[i] = H_opt_var.get(ibd2_evaluated[l], 2*alookup+0) + H_opt_var.get(ibd2_evaluated[l], 2*alookup+1);
 			A[G[i]][U[G[i]]] = alookup;
 			D[G[i]][U[G[i]]] = P[G[i]];
 			P[G[i]] = 0;
@@ -251,23 +261,22 @@ void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack
 		}
 		for (int i = 1 ; i < n_ind ; i ++) {
 			int ind0 = A[0][i];
-			int ng0 = (l<(pbwt_evaluated.size()-1))?(H_opt_var.get(pbwt_evaluated[l+1], 2*ind0+0)+H_opt_var.get(pbwt_evaluated[l+1], 2*ind0+1)):-1;
+			int ng0 = (l<(ibd2_evaluated.size()-1))?(H_opt_var.get(ibd2_evaluated[l+1], 2*ind0+0)+H_opt_var.get(ibd2_evaluated[l+1], 2*ind0+1)):-1;
 			for (int ip = i-1, div = -1 ; ip >= 0 ; ip --) {
 				if (G[ip] != G[i]) break;
 				div = max(div, D[0][ip+1]);
-				double lengthMatchCM = pbwt_cm[l] - pbwt_cm[div];
-				if (lengthMatchCM >= minLengthIBDtrack) {
+				double lengthMatchCM = ibd2_cm[l] - ibd2_cm[div];
+				if (lengthMatchCM >= minLengthIBDtrack && l-div >= ibd2_count) {
 					int ind1 = A[0][ip];
-					int ng1 = (l<(pbwt_evaluated.size()-1))?(H_opt_var.get(pbwt_evaluated[l+1], 2*ind1+0)+H_opt_var.get(pbwt_evaluated[l+1], 2*ind1+1)):-1;
+					int ng1 = (l<(ibd2_evaluated.size()-1))?(H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+0)+H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+1)):-1;
 					if (ng0 < 0 || ng0 != ng1) {
-						bannedPairs[min(ind0, ind1)].push_back(IBD2track(max(ind0, ind1), pbwt_cm[div] - windowSize, pbwt_cm[l] + windowSize));
-						//bannedPairs[ind1].push_back(IBD2track(ind0, pbwt_cm[div] - windowSize, pbwt_cm[l] + windowSize));
-						//cout << l << " " << div << " " << pbwt_evaluated.size() << " " << lengthMatchCM << " " << ind0 << " " << ind1 << endl;
+						bannedPairs[min(ind0, ind1)].push_back(IBD2track(max(ind0, ind1), ibd2_cm[div] - windowSize, ibd2_cm[l] + windowSize));
+						//cout << l << " " << div << " " << ibd2_evaluated.size() << " " << lengthMatchCM << " " << ind0 << " " << ind1 << endl;
 					}
 				} else break;
 			}
 		}
-		vrb.progress("  * IBD2 mask", (l+1)*1.0/pbwt_evaluated.size());
+		vrb.progress("  * IBD2 mask", (l+1)*1.0/ibd2_evaluated.size());
 	}
 
 	unsigned long npairstot = 0, npairsind = 0;
@@ -278,5 +287,5 @@ void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack
 		npairstot += bannedPairs[i].size();
 		npairsind += (bannedPairs[i].size()>0);
 	}
-	vrb.bullet("IBD2 mask [n=" + stb.str(npairsind) + " / p=" + stb.str(npairstot) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+	vrb.bullet("IBD2 mask [#inds=" + stb.str(npairsind) + " / #pairs=" + stb.str(npairstot) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }

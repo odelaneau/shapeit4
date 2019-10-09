@@ -64,7 +64,7 @@ void phaser::read_files_and_initialise() {
 	H.allocatePBWTarrays();
 	H.updateHaplotypes(G, true);
 	H.transposeHaplotypes_H2V(true);
-	H.searchIBD2matching(V, options["ibd2"].as < double > (), options["window"].as < double > ());
+	H.searchIBD2matching(V, options["ibd2-length"].as < double > (), options["window"].as < double > (), options["ibd2-maf"].as < double > (), options["ibd2-mdr"].as < double > (), options["ibd2-count"].as < int > ());
 	pbwt_solver solver = pbwt_solver(H);
 	solver.sweep(G);
 	solver.free();

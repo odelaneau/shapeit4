@@ -149,11 +149,13 @@ void variant_map::setGeneticMap(gmap_reader & readerGM) {
 	tac.clock();
 	int n_set = setCentiMorgan(readerGM.pos_bp, readerGM.pos_cm);
 	int n_interpolated = interpolateCentiMorgan(readerGM.pos_bp, readerGM.pos_cm);
-	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= vec_pos[0]->cm;
+	double baseline = vec_pos[0]->cm;
+	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= baseline;
 	vrb.bullet("cM interpolation [s=" + stb.str(n_set) + " / i=" + stb.str(n_interpolated) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
 
 void variant_map::setGeneticMap() {
 	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm = vec_pos[l]->bp * 1.0 / 1e6;
-	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= vec_pos[0]->cm;
+	double baseline = vec_pos[0]->cm;
+	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= baseline;
 }

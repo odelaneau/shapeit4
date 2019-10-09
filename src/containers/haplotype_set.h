@@ -92,7 +92,7 @@ public:
 	void transposePBWTarrays();
 
 	//IBD2 routines
-	void searchIBD2matching(variant_map &, double, double);
+	void searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count);
 	bool checkIBD2matching(int, int, double);
 
 	//Haplotype routines

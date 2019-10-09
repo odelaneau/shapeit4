@@ -47,6 +47,7 @@ public :
 	bool isMonomorphic();
 	unsigned int getMAC();
 	double getMDR();
+	double getMAF();
 };
 
 #endif
