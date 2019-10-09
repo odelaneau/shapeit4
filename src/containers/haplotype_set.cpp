@@ -270,13 +270,12 @@ void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack
 					int ind1 = A[0][ip];
 					int ng1 = (l<(ibd2_evaluated.size()-1))?(H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+0)+H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+1)):-1;
 					if (ng0 < 0 || ng0 != ng1) {
-						bannedPairs[min(ind0, ind1)].push_back(IBD2track(max(ind0, ind1), ibd2_cm[div] - windowSize, ibd2_cm[l] + windowSize));
-						//cout << l << " " << div << " " << ibd2_evaluated.size() << " " << lengthMatchCM << " " << ind0 << " " << ind1 << endl;
+						bannedPairs[min(ind0, ind1)].push_back(IBD2track(max(ind0, ind1), ((ibd2_cm[div]-windowSize)>=0)?(ibd2_cm[div]-windowSize):0.0f, ibd2_cm[l] + windowSize));
 					}
 				} else break;
 			}
 		}
-		vrb.progress("  * IBD2 mask", (l+1)*1.0/ibd2_evaluated.size());
+		vrb.progress("  * IBD2 constraints ", (l+1)*1.0/ibd2_evaluated.size());
 	}
 
 	unsigned long npairstot = 0, npairsind = 0;
@@ -287,5 +286,18 @@ void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack
 		npairstot += bannedPairs[i].size();
 		npairsind += (bannedPairs[i].size()>0);
 	}
-	vrb.bullet("IBD2 mask [#inds=" + stb.str(npairsind) + " / #pairs=" + stb.str(npairstot) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+	vrb.bullet("IBD2 constraints [#inds=" + stb.str(npairsind) + " / #pairs=" + stb.str(npairstot) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
+
+void haplotype_set::writeIBD2matching(genotype_set & G, string foutput) {
+	output_file fd(foutput);
+	fd << "idx0 idx1 id0 id1 startCM stopCM lengthCM" << endl;
+	for (int i0 = 0 ; i0 < bannedPairs.size(); i0 ++) {
+		for (int i1 = 0 ; i1 < bannedPairs[i0].size(); i1 ++) {
+			fd << i0 << " " << bannedPairs[i0][i1].ind << " " << G.vecG[i0]->name << " " << G.vecG[bannedPairs[i0][i1].ind]->name << " " << bannedPairs[i0][i1].cm0 << " " << bannedPairs[i0][i1].cm1 << " " << bannedPairs[i0][i1].cm1-bannedPairs[i0][i1].cm0 << endl;
+		}
+	}
+	fd.close();
+	vrb.bullet("wrote IBD2 constraints in file");
+}
+

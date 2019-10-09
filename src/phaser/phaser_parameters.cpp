@@ -55,7 +55,8 @@ void phaser::declare_options() {
 			("ibd2-length", bpo::value< double >()->default_value(2.5), "Minimal size of IBD2 tracks for building copying constraints")
 			("ibd2-maf", bpo::value< double >()->default_value(0.01), "Minimal Minor Allele Frequency for variants to be considered in the IBD2 mapping")
 			("ibd2-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
-			("ibd2-count", bpo::value< int >()->default_value(100), "Minimal number of filtered variants in IBD2 tracks");
+			("ibd2-count", bpo::value< int >()->default_value(100), "Minimal number of filtered variants in IBD2 tracks")
+			("ibd2-output", bpo::value< string >(), "Output all IBD2 constraints in the specified file (useful for debugging!)");
 
 	bpo::options_description opt_hmm ("HMM parameters");
 	opt_hmm.add_options()
@@ -143,7 +144,6 @@ void phaser::verbose_options() {
 	vrb.bullet("HMM     : !AVX2 optimization inactive!");
 #endif
 	vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(options["ibd2-count"].as < int > ()) + " / MAF>=" + stb.str(options["ibd2-maf"].as < double > (), 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
-
-
+	if (options.count("ibd2-output")) vrb.bullet("IBD2    : write IBD2 tracks in [" +  options["ibd2-output"].as < string > () + "]");
 
 }

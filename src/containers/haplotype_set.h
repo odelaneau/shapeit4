@@ -93,6 +93,7 @@ public:
 
 	//IBD2 routines
 	void searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count);
+	void writeIBD2matching(genotype_set & G, string);
 	bool checkIBD2matching(int, int, double);
 
 	//Haplotype routines
