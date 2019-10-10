@@ -52,10 +52,10 @@ void phaser::declare_options() {
 	
 	bpo::options_description opt_ibd2 ("IBD2 parameters");
 	opt_ibd2.add_options()
-			("ibd2-length", bpo::value< double >()->default_value(2.5), "Minimal size of IBD2 tracks for building copying constraints")
+			("ibd2-length", bpo::value< double >()->default_value(3), "Minimal size of IBD2 tracks for building copying constraints")
 			("ibd2-maf", bpo::value< double >()->default_value(0.01), "Minimal Minor Allele Frequency for variants to be considered in the IBD2 mapping")
 			("ibd2-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
-			("ibd2-count", bpo::value< int >()->default_value(100), "Minimal number of filtered variants in IBD2 tracks")
+			("ibd2-count", bpo::value< int >()->default_value(150), "Minimal number of filtered variants in IBD2 tracks")
 			("ibd2-output", bpo::value< string >(), "Output all IBD2 constraints in the specified file (useful for debugging!)");
 
 	bpo::options_description opt_hmm ("HMM parameters");
