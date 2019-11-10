@@ -2,13 +2,13 @@
 CXX=g++ -std=c++11
 
 #HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
-HTSLIB_INC=$(HOME)/Tools/htslib-1.9
-HTSLIB_LIB=$(HOME)/Tools/htslib-1.9/libhts.a
+HTSLIB_INC=$(EBROOTHTSLIB)/include/htslib
+HTSLIB_LIB=$(EBROOTHTSLIB)/lib/libhts.a
 
 #BOOST IOSTREAM & PROGRAM_OPTION LIBRARIES [SPECIFY YOUR OWN PATHS]
-BOOST_INC=/usr/include
-BOOST_LIB_IO=/usr/lib/x86_64-linux-gnu/libboost_iostreams.a
-BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
+BOOST_INC=$(EBROOTBOOST)/include/boost
+BOOST_LIB_IO=$(EBROOTBOOST)/lib/libboost_iostreams.a
+BOOST_LIB_PO=$(EBROOTBOOST)/lib/libboost_program_options.a
 
 #HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
 #HTSLIB_INC=/software/UHTS/Analysis/samtools/1.4/include
@@ -33,7 +33,7 @@ CXXFLAG=-O3 -mavx2 -mfma
 LDFLAG=-O3
 
 #DYNAMIC LIBRARIES
-DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
+DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma -lcurl -lssl -lcrypto
 
 #SHAPEIT SOURCES & BINARY
 BFILE=bin/shapeit4
