@@ -36,7 +36,8 @@ void phaser::declare_options() {
 			("scaffold,S", bpo::value< string >(), "Scaffold of haplotypes in VCF/BCF format")
 			("map,M", bpo::value< string >(), "Genetic map")
 			("region,R", bpo::value< string >(), "Target region")
-			("use-PS", bpo::value<double>(), "Informs phasing using PS field from read based phasing");
+			("use-PS", bpo::value<double>(), "Informs phasing using PS field from read based phasing")
+			("sequencing", "Default parameter setting for sequencing data (e.g. high variant density)");
 
 	bpo::options_description opt_mcmc ("MCMC parameters");
 	opt_mcmc.add_options()
@@ -45,16 +46,16 @@ void phaser::declare_options() {
 
 	bpo::options_description opt_pbwt ("PBWT parameters");
 	opt_pbwt.add_options()
-			("pbwt-modulo", bpo::value< double >()->default_value(0.025), "Storage frequency of PBWT indexes in cM (i.e. 0.025 means storage every 0.025 cM)")
+			("pbwt-modulo", bpo::value< double >()->default_value(0.02), "Storage frequency of PBWT indexes in cM (i.e. storage every 0.02 cM by default)")
 			("pbwt-depth", bpo::value< int >()->default_value(4), "Depth of PBWT indexes to condition on")
 			("pbwt-mac", bpo::value< int >()->default_value(2), "Minimal Minor Allele Count at which PBWT is evaluated")
-			("pbwt-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing Data Rate at which PBWT is evaluated");
+			("pbwt-mdr", bpo::value< double >()->default_value(0.50), "Maximal Missing Data Rate at which PBWT is evaluated");
 	
 	bpo::options_description opt_ibd2 ("IBD2 parameters");
 	opt_ibd2.add_options()
 			("ibd2-length", bpo::value< double >()->default_value(3), "Minimal size of IBD2 tracks for building copying constraints")
 			("ibd2-maf", bpo::value< double >()->default_value(0.01), "Minimal Minor Allele Frequency for variants to be considered in the IBD2 mapping")
-			("ibd2-mdr", bpo::value< double >()->default_value(0.050), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
+			("ibd2-mdr", bpo::value< double >()->default_value(0.50), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
 			("ibd2-count", bpo::value< int >()->default_value(150), "Minimal number of filtered variants in IBD2 tracks")
 			("ibd2-output", bpo::value< string >(), "Output all IBD2 constraints in the specified file (useful for debugging!)");
 
@@ -85,7 +86,7 @@ void phaser::parse_command_line(vector < string > & args) {
 	vrb.title("SHAPEIT");
 	vrb.bullet("Author        : Olivier DELANEAU, University of Lausanne");
 	vrb.bullet("Contact       : olivier.delaneau@gmail.com");
-	vrb.bullet("Version       : 4.1.1");
+	vrb.bullet("Version       : 4.1.2");
 	vrb.bullet("Run date      : " + tac.date());
 }
 
@@ -114,6 +115,19 @@ void phaser::check_options() {
 	if (!options["window"].defaulted() && (options["window"].as < double > () < 0.5 || options["window"].as < double > () > 10))
 		vrb.error("You must specify a window size comprised between 0.5 and 10 cM");
 
+	pbwt_modulo = options["pbwt-modulo"].as < double > ();
+	ibd2_maf = options["ibd2-maf"].as < double > ();
+	ibd2_count = options["ibd2-count"].as < int > ();
+	if (options.count("sequencing")) {
+		pbwt_modulo = 0.0005;
+		ibd2_maf = 0.0001;
+		ibd2_count = 10000;
+	}
+
+	if (!options["pbwt-modulo"].defaulted()) pbwt_modulo = options["pbwt-modulo"].as < double > ();
+	if (!options["ibd2-maf"].defaulted()) ibd2_maf = options["ibd2-maf"].as < double > ();
+	if (!options["ibd2-count"].defaulted()) ibd2_count = options["ibd2-count"].as < int > ();
+
 	parse_iteration_scheme(options["mcmc-iterations"].as < string > ());
 }
 
@@ -133,7 +147,7 @@ void phaser::verbose_options() {
 	vrb.bullet("Threads : " + stb.str(options["thread"].as < int > ()) + " threads");
 	vrb.bullet("MCMC    : " + get_iteration_scheme());
 	vrb.bullet("PBWT    : Depth of PBWT neighbours to condition on: " + stb.str(options["pbwt-depth"].as < int > ()));
-	vrb.bullet("PBWT    : Store indexes at variants [MAC>=" + stb.str(options["pbwt-mac"].as < int > ()) + " / MDR<=" + stb.str(options["pbwt-mdr"].as < double > ()) + " / Dist=" + stb.str(options["pbwt-modulo"].as < double > ()) + " cM]");
+	vrb.bullet("PBWT    : Store indexes at variants [MAC>=" + stb.str(options["pbwt-mac"].as < int > ()) + " / MDR<=" + stb.str(options["pbwt-mdr"].as < double > ()) + " / Dist=" + stb.str(pbwt_modulo) + " cM]");
 	vrb.bullet("HMM     : K is variable / min W is " + stb.str(options["window"].as < double > (), 2) + "cM / Ne is "+ stb.str(options["effective-size"].as < int > ()));
 	if (options.count("map")) vrb.bullet("HMM     : Recombination rates given by genetic map");
 	else vrb.bullet("HMM     : Constant recombination rate of 1cM per Mb");
@@ -143,7 +157,7 @@ void phaser::verbose_options() {
 #else
 	vrb.bullet("HMM     : !AVX2 optimization inactive!");
 #endif
-	vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(options["ibd2-count"].as < int > ()) + " / MAF>=" + stb.str(options["ibd2-maf"].as < double > (), 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
+	vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(ibd2_count) + " / MAF>=" + stb.str(ibd2_maf, 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
 	if (options.count("ibd2-output")) vrb.bullet("IBD2    : write IBD2 tracks in [" +  options["ibd2-output"].as < string > () + "]");
 
 }

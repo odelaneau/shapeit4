@@ -46,10 +46,13 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 		statH.push(threadData[id_worker].Kvec[w].size()*1.0);
 		statS.push((V.vec_pos[threadData[id_worker].C[w].stop_locus]->bp - V.vec_pos[threadData[id_worker].C[w].start_locus]->bp + 1) * 1.0 / 1e6);
 		if (options["thread"].as < int > () > 1) pthread_mutex_unlock(&mutex_workers);
-		assert(threadData[id_worker].Kvec[w].size()>0);
+
+		if (threadData[id_worker].Kvec[w].size() == 0) {
+			vrb.error("Could not find conditioning haplotypes for [" + G.vecG[id_job]->name  + "] / check options --pbwt-* and --ibd2-*")
+		}
 
 		haplotype_segment HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
-		int outcome = HS.expectation(threadData[id_worker].T);
+		int outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
 		if (outcome < 0) vrb.error("Underflow impossible to recover");
 		else n_underflow_recovered += outcome;
 	}
@@ -58,14 +61,14 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 
 	vector < bool > flagMerges;
 	switch (iteration_types[iteration_stage]) {
-	case STAGE_BURN:	G.vecG[id_job]->sample(threadData[id_worker].T);
+	case STAGE_BURN:	G.vecG[id_job]->sample(threadData[id_worker].T, threadData[id_worker].M);
 						break;
-	case STAGE_PRUN:	G.vecG[id_job]->sample(threadData[id_worker].T);
+	case STAGE_PRUN:	G.vecG[id_job]->sample(threadData[id_worker].T, threadData[id_worker].M);
 						G.vecG[id_job]->mapMerges(threadData[id_worker].T, options["mcmc-prune"].as < double > (), flagMerges);
 						G.vecG[id_job]->performMerges(threadData[id_worker].T, flagMerges);
 						break;
-	case STAGE_MAIN:	G.vecG[id_job]->sample(threadData[id_worker].T);
-						G.vecG[id_job]->store(threadData[id_worker].T);
+	case STAGE_MAIN:	G.vecG[id_job]->sample(threadData[id_worker].T, threadData[id_worker].M);
+						G.vecG[id_job]->store(threadData[id_worker].T, threadData[id_worker].M);
 						break;
 	}
 }

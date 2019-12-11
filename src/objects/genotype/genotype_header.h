@@ -43,7 +43,8 @@
 #define VAR_GET_MIS(e,v)	((((v)>>((e)<<2))&3)==1)
 #define VAR_GET_HET(e,v)	((((v)>>((e)<<2))&3)==2)
 #define VAR_GET_SCA(e,v)	((((v)>>((e)<<2))&3)==3)
-#define VAR_GET_AMB(e,v)	((((v)>>((e)<<2))&3)!=0)
+//#define VAR_GET_AMB(e,v)	((((v)>>((e)<<2))&3)!=0)
+#define VAR_GET_AMB(e,v)	((((v)>>((e)<<2))&3)>1)
 #define VAR_SET_HOM(e,v)	((e)?((v)&=207):((v)&=252))
 #define VAR_SET_MIS(e,v)	((v)|=(1<<((e)<<2)))
 #define VAR_SET_HET(e,v)	((v)|=(2<<((e)<<2)))
@@ -76,6 +77,7 @@ public:
 	unsigned int n_segments;			// Number of segments
 	unsigned int n_variants;			// Number of variants	(to iterate over Variants)
 	unsigned int n_ambiguous;			// Number of ambiguous variants
+	unsigned int n_missing;				// Number of missing
 	unsigned int n_transitions;			// Number of transitions
 	unsigned int n_masks;				// Number of masked transitions (either 0 or n_transitions)
 	unsigned char curr_dipcodes [64];	// List of diplotypes in a given segment
@@ -89,6 +91,8 @@ public:
 	//PHASE PROBS
 	vector < bool > ProbMask;
 	vector < float > ProbStored;
+	vector < float > ProbMissing;
+	unsigned int nProbMissingStored;
 	//vector < float > StoredProbs;
 
 	// PHASE SETS
@@ -99,16 +103,17 @@ public:
 	genotype(unsigned int);
 	~genotype();
 	void free();
+	void make(vector < unsigned char > &, vector < float > &);
 	void make(vector < unsigned char > &);
 	void build();
-	void sample(vector < double > &);
-	void sampleForward(vector < double > &);
-	void sampleBackward(vector < double > &);
+	void sample(vector < double > &, vector < float > &);
+	void sampleForward(vector < double > &, vector < float > &);
+	void sampleBackward(vector < double > &, vector < float > &);
 	void solve();
 	void mapMerges(vector < double > &, double , vector < bool > &);
 	void performMerges(vector < double > &, vector < bool > &);
 	void mask();
-	void store(vector < double > &);
+	void store(vector < double > &, vector < float > &);
 
 	//INLINES
 	unsigned int countDiplotypes(unsigned long);

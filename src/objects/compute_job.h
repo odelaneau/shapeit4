@@ -33,20 +33,24 @@ public:
 	int start_locus;
 	int start_segment;
 	int start_ambiguous;
+	int start_missing;
 	int start_transition;
 	int stop_locus;
 	int stop_segment;
 	int stop_ambiguous;
+	int stop_missing;
 	int stop_transition;
 
 	coordinates() {
 		start_locus = 0;
 		start_segment = 0;
 		start_ambiguous = 0;
+		start_missing = 0;
 		start_transition = 0;
 		stop_locus = 0;
 		stop_segment = 0;
 		stop_ambiguous = 0;
+		stop_missing = 0;
 		stop_transition = 0;
 	}
 
@@ -54,11 +58,19 @@ public:
 		start_locus = 0;
 		start_segment = 0;
 		start_ambiguous = 0;
+		start_missing = 0;
 		start_transition = 0;
 		stop_locus = 0;
 		stop_segment = 0;
 		stop_ambiguous = 0;
+		stop_missing = 0;
 		stop_transition = 0;
+	}
+
+	string toString() {
+		string str="";
+		str += "L=[" + stb.str(start_locus) + "->" + stb.str(stop_locus) + "]";
+		return str;
 	}
 };
 
@@ -68,10 +80,11 @@ public:
 	genotype_set & G;
 	haplotype_set & H;
 	vector < double > T;
+	vector < float > M;
 	vector < coordinates > C;
 	vector < vector < unsigned int > > Kvec;
 
-	compute_job(variant_map & , genotype_set & , haplotype_set & , unsigned int n_max_transitions);
+	compute_job(variant_map & , genotype_set & , haplotype_set & , unsigned int n_max_transitions , unsigned int n_max_missing);
 	~compute_job();
 
 	void free();

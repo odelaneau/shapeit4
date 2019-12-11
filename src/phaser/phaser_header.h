@@ -61,6 +61,11 @@ public:
 	unsigned int iteration_stage;
 	int n_underflow_recovered;
 
+	//PARAMETERS
+	double pbwt_modulo;
+	double ibd2_maf;
+	int ibd2_count;
+
 	//
 	basic_stats statH,statS;
 	vector < double > storedKsizes;

@@ -29,6 +29,8 @@ haplotype_segment::haplotype_segment(genotype * _G, bitmatrix & _H, vector < uns
 	locus_last = C.stop_locus;
 	ambiguous_first = C.start_ambiguous;
 	ambiguous_last = C.stop_ambiguous;
+	missing_first = C.start_missing;
+	missing_last = C.stop_missing;
 	transition_first = C.start_transition;
 	n_cond_haps = idxH.size();
 	prob1 = aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 1.0);
@@ -44,6 +46,15 @@ haplotype_segment::haplotype_segment(genotype * _G, bitmatrix & _H, vector < uns
 	AlphaSum = vector < aligned_vector32 < float > > (segment_last - segment_first + 1, aligned_vector32 < float > (HAP_NUMBER, 0.0));
 	AlphaSumSum = aligned_vector32 < float > (segment_last - segment_first + 1, 0.0);
 	BetaSum = aligned_vector32 < float > (HAP_NUMBER, 0.0);
+	n_missing = missing_last - missing_first + 1;
+	//cout << G->name << " " << missing_first << " " << missing_last << " " << n_missing << endl;
+	if (n_missing > 0) {
+		AlphaMissing = vector < aligned_vector32 < float > > (n_missing, aligned_vector32 < float > (HAP_NUMBER * n_cond_haps, 0.0));
+		AlphaSumMissing = vector < aligned_vector32 < float > > (n_missing, aligned_vector32 < float > (HAP_NUMBER, 0.0));
+		ProbM1sums = aligned_vector32 < float >(HAP_NUMBER, 0.0);
+		ProbM0sums = aligned_vector32 < float >(HAP_NUMBER, 0.0);
+		ProbM = aligned_vector32 < float >(HAP_NUMBER, 0.0);
+	}
 }
 
 haplotype_segment::~haplotype_segment() {
@@ -82,13 +93,20 @@ void haplotype_segment::forward() {
 	curr_segment_index = segment_first;
 	curr_segment_locus = 0;
 	curr_abs_ambiguous = ambiguous_first;
+	curr_abs_missing = missing_first;
+
 	for (curr_abs_locus = locus_first ; curr_abs_locus <= locus_last ; curr_abs_locus++) {
 		curr_rel_locus = curr_abs_locus - locus_first;
+		curr_rel_missing = curr_abs_missing - missing_first;
 		bool paired = (curr_rel_locus % 2 == 0);
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
+		bool mis = VAR_GET_MIS(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 
-		if (amb) AMB(paired);
+
+		if (mis) MIS(paired);
+		else if (amb) AMB(paired);
 		else HOM(paired);
+
 		if (curr_rel_locus != 0) {
 			if (curr_segment_locus == 0) COLLAPSE(true, paired);
 			else RUN(true, paired);
@@ -102,6 +120,12 @@ void haplotype_segment::forward() {
 			AlphaSum[curr_segment_index - segment_first] = (paired?probSumH2:probSumH1);
 			AlphaSumSum[curr_segment_index - segment_first] = (paired?probSumT2:probSumT1);
 		}
+		if (mis) {
+			AlphaMissing[curr_rel_missing] = (paired?prob2:prob1);
+			AlphaSumMissing[curr_rel_missing] = (paired?probSumH2:probSumH1);
+			curr_abs_missing ++;
+		}
+
 		curr_segment_locus ++;
 		curr_abs_ambiguous += amb;
 		if (curr_segment_locus >= G->Lengths[curr_segment_index]) {
@@ -111,16 +135,24 @@ void haplotype_segment::forward() {
 	}
 }
 
-void haplotype_segment::backward() {
+void haplotype_segment::backward(vector < float > & missing_probabilities) {
 	curr_segment_index = segment_last;
 	curr_segment_locus = G->Lengths[segment_last] - 1;
 	curr_abs_ambiguous = ambiguous_last;
+	curr_abs_missing = missing_last;
 	for (curr_abs_locus = locus_last ; curr_abs_locus >= locus_first ; curr_abs_locus--) {
 		curr_rel_locus = curr_abs_locus - locus_first;
+		curr_rel_missing = curr_abs_missing - missing_first;
+		//cout << curr_abs_missing << " " << missing_first << endl;
+		//assert(curr_rel_missing >= 0);
 		bool paired = (curr_rel_locus % 2 == 0);
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
-		if (amb) AMB(paired);
+		bool mis = VAR_GET_MIS(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
+
+		if (mis) MIS(paired);
+		else if (amb) AMB(paired);
 		else HOM(paired);
+
 		if (curr_abs_locus != locus_last) {
 			if (curr_segment_locus == G->Lengths[curr_segment_index] - 1) COLLAPSE(false, paired);
 			else RUN(false, paired);
@@ -132,6 +164,24 @@ void haplotype_segment::backward() {
 			//if (paired) copy(prob2.begin(), prob2.end(), Beta[curr_segment_index - segment_first].begin());
 			//else copy(prob1.begin(), prob1.end(), Beta[curr_segment_index - segment_first].begin());
 		}
+		if (mis) {
+			//Impute missing for 8 possible haplotypes
+			fill(ProbM1sums.begin(), ProbM1sums.end(), 0.0);
+			fill(ProbM0sums.begin(), ProbM0sums.end(), 0.0);
+			for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
+				for (int h = 0 ; h < HAP_NUMBER ; h ++) ProbM[h] = (AlphaMissing[curr_rel_missing][i + h] / AlphaSumMissing[curr_rel_missing][h]) * (paired?prob2[i + h]:prob1[i + h]);
+				if (H.get(idxH[k], curr_abs_locus)) for (int h = 0 ; h < HAP_NUMBER ; h ++) ProbM1sums[h] += ProbM[h];
+				else for (int h = 0 ; h < HAP_NUMBER ; h ++) ProbM0sums[h] += ProbM[h];
+			}
+			//cout << curr_abs_missing;
+			for (int h = 0 ; h < HAP_NUMBER ; h ++) {
+				missing_probabilities[curr_abs_missing * HAP_NUMBER + h] = ProbM1sums[h] / (ProbM0sums[h]+ProbM1sums[h]);
+				//cout << " " << stb.str(missing_probabilities[curr_abs_missing * HAP_NUMBER + h], 3);
+			}
+			//cout << endl;
+			curr_abs_missing--;
+		}
+
 		if (curr_abs_locus == 0) BetaSum=(paired?probSumH2:probSumH1);
 		curr_segment_locus--;
 		curr_abs_ambiguous -= amb;
@@ -142,9 +192,12 @@ void haplotype_segment::backward() {
 	}
 }
 
-int haplotype_segment::expectation(vector < double > & transition_probabilities) {
+int haplotype_segment::expectation(vector < double > & transition_probabilities, vector < float > & missing_probabilities) {
+	//cout << "ok1 " << n_cond_haps << endl;
 	forward();
-	backward();
+	//cout << "ok2" << endl;
+	backward(missing_probabilities);
+	//cout << "ok3" << endl;
 
 	unsigned int n_transitions = 0;
 	if (!segment_first) {
@@ -207,6 +260,7 @@ int haplotype_segment::expectation(vector < double > & transition_probabilities)
 			curr_segment_locus = 0;
 		}
 	}
+	//cout << "ok4" << endl;
 	return n_underflow_recovered;
 }
 

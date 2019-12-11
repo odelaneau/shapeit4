@@ -50,8 +50,12 @@ private:
 	int locus_last;
 	int ambiguous_first;
 	int ambiguous_last;
+	int missing_first;
+	int missing_last;
 	int transition_first;
 	unsigned int n_cond_haps;
+	unsigned int n_missing;
+
 
 	//CURSORS
 	int curr_segment_index;
@@ -61,6 +65,8 @@ private:
 	int curr_rel_segment_index;
 	int curr_abs_ambiguous;
 	int curr_abs_transition;
+	int curr_abs_missing;
+	int curr_rel_missing;
 
 	//DYNAMIC ARRAYS
 	float probSumT1;
@@ -78,7 +84,10 @@ private:
 	aligned_vector32 < float > AlphaSumSum;
 	aligned_vector32 < float > BetaSum;
 
-
+	//IMPUTED MISSING DATA
+	vector < aligned_vector32 < float > > AlphaMissing;
+	vector < aligned_vector32 < float > > AlphaSumMissing;
+	aligned_vector32 < float > ProbM0sums, ProbM1sums, ProbM;
 
 	//STATIC ARRAYS
 	float sumHProbs;
@@ -86,9 +95,12 @@ private:
 	double sumDProbs;
 	double DProbs [HAP_NUMBER * HAP_NUMBER * HAP_NUMBER * HAP_NUMBER] __attribute__ ((aligned(32)));
 
+
 	//INLINED AND UNROLLED ROUTINES
 	void HOM(bool);
 	void AMB(bool);
+	void MIS(bool);
+
 	void SUM(bool);
 	void SUMK(bool);
 	void COLLAPSE(bool, bool);
@@ -102,8 +114,8 @@ public:
 	~haplotype_segment();
 
 	void forward();
-	void backward();
-	int expectation(vector < double > &);
+	void backward(vector < float > &);
+	int expectation(vector < double > &, vector < float > &);
 };
 
 inline
@@ -156,6 +168,12 @@ void haplotype_segment::AMB(bool paired) {
 			else memcpy(&prob1[i], &galleles0[0], HAP_NUMBER*sizeof(float));
 		}
 	}
+}
+
+inline
+void haplotype_segment::MIS(bool paired) {
+	if (paired) fill(prob2.begin(), prob2.end(), 1.0);
+	else fill(prob1.begin(), prob1.end(), 1.0);
 }
 
 inline

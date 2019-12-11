@@ -66,7 +66,12 @@
 	<div class="container">
 		<h1>Versions</h1>
 		<div class="separator"></div>
-		<p><b>Version 4.1</b>: Second release. Contains the following changes compared to previous version:</p>
+		<p><b>Version 4.1.2</b>: Second release. Contains the following changes compared to previous version:</p>
+		<ul>
+			<li>Bug correction on the PBWT selection. The previous functions were not working well for data with a high density of variants (e.g. sequencing data). We added an option --sequencing to adjust the default parameters to what we think is adapted to sequencing data.</li>
+			<li>Better algorithm for imputing missing data. The previous algorithm was performing badly when the amount of missing data is high (e.g. > 20%). The new one is doing much better in such particular cases.</li>
+		</ul>    
+		<p><b>Version 4.1.1</b>: Contains the following changes compared to previous version:</p>
 		<ul>
 			<li>Bug correction on the detection of IBD2 segments. The previous function was not working in some cases involving increased switch errors rates for duplicates, twins and siblings.</li>
 			<li>Better genetic map interpolation, i.e. way faster.</li>
@@ -90,8 +95,8 @@
         <div class="row">
         <p><b>Important notes before starting:</b></p>
         <ol>
-			<li>Compile SHAPEIT4 on the same machine it will be run. This significantly increases performance.</li>
-			<li>Run preferentially SHAPEIT4 on CPUs supporting AVX2 instruction set as th code has been heavily optimized in that direction. AVX2 is usually available for CPUs from 2012+. Run <code>cat /proc/cpuinfo</code> in order to check.</li>
+			<li>Compile SHAPEIT4 on the same machine it will be run if possible. This significantly increases performance.</li>
+			<li>Run preferentially SHAPEIT4 on CPUs supporting AVX2 instruction set as the code has been heavily optimized in that direction. AVX2 is usually available for CPUs from 2012+. Run <code>cat /proc/cpuinfo</code> in order to check.</li>
 			<li>Compile SHAPEIT4 using g++ version >= 5 at the very least. I personally use version v7.4.0. Compiling it using g++ v4 does not work. Run <code>g++ --version</code> in order to check. I've never tried to compile it using Intel compiler.</li>
         </ol>
                 
@@ -198,40 +203,58 @@
 		<h2>6b. Tuning the PBWT based selection on v4.1</h2>
 		<p>Reducing the number of conditioning neighbours in the PBWT can be achieved using the <code>--pbwt-depth</code> option. The default value is 4. Decreasing it results in faster runs at the cost of some accuracy. Conversely, increasing it to 8 for instance can lead to better accuracy:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-depth 8</b></code>
-		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The way this option works differs from v4.0. Now variants at which PWT arrays are stored depend on cM distances between them. This distance is given by <code>--pbwt-modulo</code>. The default is 0.025cM, i.e. PBWT storage happens every 0.025cM. Decreasing this distance leads to lower memory usage. </p>
-		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-modulo 0.05</b></code>
-		<p>Some variants can also be ignored when storing PBWT indexes based on (i) their Minor Allele Count (<code>--pbwt-mac</code>) and/or (ii) Missing Data Rate (<code>--pbwt-mdr</code>). Defaults are (i) MAC>=2 and (ii) MDR <= 0.05. This can be changed as follows:</p>
-		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-mac 5 --pbwt-mdr 0.10</b></code>
+		<p>Changing variants at which PBWT indexes are stored can be done using <code>--pbwt-modulo</code>. The way this option works differs from v4.0. Now variants at which PWT arrays are stored depend on cM distances between them. This distance is given by <code>--pbwt-modulo</code>. By default, PBWT storage happens every 0.02cM. Decreasing this distance leads to higher memory usage. </p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-modulo 0.005</b></code>
+		<p>Some variants can also be ignored when storing PBWT indexes based on (i) their Minor Allele Count (<code>--pbwt-mac</code>) and/or (ii) Missing Data Rate (<code>--pbwt-mdr</code>). Defaults are (i) MAC>=2 and (ii) MDR <= 0.5. This can be changed as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-mac 5 --pbwt-mdr 0.2</b></code>
 		<p>You can also change the size of the genomic window into which phasing is carried out using the option <code>--window</code>. The way this option works differs from v4.0. Now the size of the window is based n cM and not anymore on Mb. The default value is 2.5cM. Increasing it results in more conditioning haplotypes being used and therefore increased running times. It is preferable to use <code>--pbwt-depth</code> instead of <code>--window</code> to increase the number of conditioning haplotypes in order to increase accuracy. Anyway, this can be done as follows:</p>
-		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--window 5</b></code>		
- 
-		<h2>7. Specifying initial estimates</h2>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--window 5</b></code>
+		
+		<h2>7. IBD2 blacklisting</h2>
+		<p>Long tracks IBD2 shared between pairs of samples can seriously harm accuracy, which typically occurs in the cases of siblings or in more extreme cases, twins or duplicates.
+		SHAPEIT4 implements an automatic screening to detect long runs of genotype matching between pairs of samples, so that it can account for it during the phasing procedure.
+		In practice, assuming two individuals I1 and I2 to be IBD2 in a given region, SHAPEIT4 will never use haplotypes from I2 to phase I1 in this region nor use haplotypes from I1 to phase I2.
+		This procedure, that we call IBD2 blacklisting, can be tuned with the options <code>--ibd2-*</code>. </p>
+		<p>You can first specify the minimal length of IBD2 tracks to be considered in the blacklisting as shown below for 5cM tracks:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--ibd2-length 5</b></code>
+		<p>You can also control the set of variants to be considered in the IBD2 matching in terms of MAF (ex. 5%), missing data rate (ex. 20%) and mininal number of SNPs (ex. 500):</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--ibd2-maf 0.05 --ibd2-mdr 0.2 --ibd2-count 500</b></code>
+		<p>Finally, if you want to have a view of the blacklisting done, use <code>--idb2-output</code> as follows:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--ibd2-output myIBD2blacklist.txt.gz</b></code>
+		
+		<h2>8. Sequencing data or SNP array data?</h2>
+		<p>Most of the default parameters are set up to work well in case of SNP array data (low variant density). In case of sequencing data, some adjustements are required, notably for the PBWT array storage (<code>--pbwt-*</code>) and IBD2 mapping (<code>--ibd2-*</code>).
+		See the relevant sections in the documentation to know more about them. For simplicity, we now have the option <code>--sequencing</code> to adjust the default parameters for sequencing data. Example:</p>
+		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--sequencing</b></code>    
+	
+		
+		<h2>9. Specifying initial estimates</h2>
 		<p>By default, SHAPEIT4 uses a quick PBWT based algorithm to initialize the haplotypes. This can be disabled using <code>--pbwt-disable-init</code>. This is particularly useful if you want to specify your own starting point for the MCMC or if you want to refine some haplotypes you estimated in the past. Initial haplotype estimates are specified in the input VCF/BCF using the option <code>--input</code> and phased genotypes, e.g. <code>0|1</code>. Example command line:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--pbwt-disable-init</b></code>
 		<p>Of note, this option is not available in v4.1</p>
 
-		<h2>8. Reproducibility</h2>
+		<h2>10. Reproducibility</h2>
 		<p>Making reproducible runs can sometimes be useful. To do so, you need to specify the random generator seed using <code>--seed</code> and to use a single thread. Using multi-threading prevents reproducibility.</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--seed 123456</b></code>
 
-		<h2>9. Using a reference panel</h2>
+		<h2>11. Using a reference panel</h2>
 		<p>Taking into account reference haplotypes when phasing can improve the accuracy of the estimates, especially when the number of reference haplotypes is much large than the number of individuals to be phased. To do so, proceed as follows:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--reference reference.bcf</b> --output phased.bcf</code>
 		<p>SHAPEIT4 only retain variants that are in the overlap (i.e. intersection) between the two panels specified with <code>--input</code> and <code>--reference</code>. In practice, it proceeds exactly the same way than <code>bcftool isec -c none</code> and therefore keeps only variants with chromosome ID, position, REF and ALT alleles that perfectly match between the two panels.</p>
 		<p>The file specified  by <code>--reference</code> needs to be indexed. This can be done using <code>bcftools index reference.bcf</code>.</p>		
 
-		<h2>10. Using haplotype scaffolds</h2>
+		<h2>12. Using haplotype scaffolds</h2>
 		<p>Haplotype scaffolds can be used to incorporate prior information about the phase of some heterozygous genotypes, coming from large reference panels of haplotypes or family information for instance. A scaffold is usually defined at a sparser set of variants than the main panel. Example run:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--scaffold scaffold.bcf</b> --output phased.bcf</code>
 		<p>Similarly to <code>--reference</code>, only variants that are in the intersection with the main panel are retained. Variants in the scaffold and the main panels are not phased and remain unchnaged. Variants not in the scaffold but in the main panel are phased onto the scaffold. Intersection is done similarly to <code>bcftool isec -c none</code>. Only individuals that appear in the two files are scaffolded (IDs need to match), those that are in the main panel and not in the scaffold are not scaffolded but appear in the output. Those that are in the scaffold and not in the main panel are not used and do not appear in the output.</p>
 		<p>The file specified  by <code>--scaffold</code> needs to be indexed. This can be done using <code>bcftools index scaffold.bcf</code>.</p>
 		
-		<h2>11. Using phase sets</h2>
+		<h2>13. Using phase sets</h2>
 		<p>Phase sets are groups of heterozygous genotypes at which phase have been infered using haplotype assembly. To achieve haplotype assembly, we recommend using <a href="https://whatshap.readthedocs.io/en/latest/">WhatsHap</a> but other software can also be considered. Phase sets are specified in the VCF/BCF file format using the <code>PS</code> field. Note that the <code>PS</code> needs to be defined in the VCF/BCF as a 32bits integer since we read them using the C function <code>bcf_get_format_int32</code>. If you define them as string, they won't be taken into account. Example run:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 <b>--use-PS 0.0001</b> --output phased.bcf</code>
 		<p>The argument of the <code>--use-PS</code> defines the expected error rate in the phase sets. You need to change the value depending on your confidence in the haplotype assembly calls. In most of the cases, we recomment using <i>0.0001</i>.</p>
 
- 		<h2>12. Complex run</h2>
+ 		<h2>14. Complex run</h2>
 		<p>SHAPEIT4 allows using all combinations of options described above, such as:</p>
 		<code>shapeit4 --input unphased.bcf \<br>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--map chr20.b37.gmap.gz \<br>
@@ -244,12 +267,12 @@
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--output phased.bcf<br></code>
 		<p>This command allows phasing the example dataset using (i) a reference panel, (ii) a scaffold of haplotypes and (iii) the phase sets specified in the input file, all this in a multi-threaded manner.</p>
 
-		<h2>13. Log file</h2>
+		<h2>15. Log file</h2>
 		<p>To record all the verbose that appear on the screen, use the <code>--log</code> option as follows:</p>
 		<code>shapeit4 --input unphased.bcf --map chr20.b37.gmap.gz --region 20 --output phased.bcf <b>--log phased.log</b></code>
 		<p>We strongly recommend to use this option for any run.</p>
 
-		<h2>14. Option summary</h2>
+		<h2>16. Option summary</h2>
 		<p>The full list of options can be obtained by running the command:</p>
 		<code>shapeit4 <b>--help</b></code>
 		<p>This should output this list of options:</b>
@@ -336,19 +359,31 @@
 				<td><code>--pbwt-modulo</code></td>
 				<td>NA</td>
 				<td>INT</td>
-				<td><b>v4.0:</b> Storage frequency of PBWT indexes in variant numbers. Default is 8 (i.e. storage every 8 variants). <b>v4.1:</b> Storage frequency of PBWT indexes in cM. Default is 0.025 (i.e. storage every 0.025 cM).</td>
+				<td><b>v4.0:</b> Storage frequency of PBWT indexes in variant numbers. Default is 8 (i.e. storage every 8 variants). <b>v4.1:</b> Storage frequency of PBWT indexes in cM. Default is 0.025 (i.e. storage every 0.025 cM). Use a low value for sequencing data and the default value for SNP array data. </td>
+			</tr>
+			<tr>
+				<td><code>--pbwt-modulo</code></td>
+				<td>NA</td>
+				<td>INT</td>
+				<td><b>v4.1:</b> Default value for Storage frequency of PBWT indexes in cM for SNP array data (storage every 0.02 cM).</td>
 			</tr>
 			<tr>
 				<td><code>--pbwt-mac</code></td>
 				<td>NA</td>
 				<td>INT</td>
-				<td>New in <b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Minor Allele Count. Default is 2, this excludes singletons and monomorphic sites. </td>
+				<td><b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Minor Allele Count. Default is 2, this excludes singletons and monomorphic sites. </td>
 			</tr>
 			<tr>
 				<td><code>--pbwt-mdr</code></td>
 				<td>NA</td>
 				<td>FLOAT</td>
-				<td>New in <b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Missing Data Rate. Default is 0.05 (5%), this excludes sites with more than 5% missing data. </td>
+				<td><b>v4.1</b>. Storage of PBWT arrays only happens at variants with this Missing Data Rate. Default is 0.05 (5%), this excludes sites with more than 5% missing data. </td>
+			</tr>
+			<tr>
+				<td><code>--sequencing</code></td>
+				<td>NA</td>
+				<td>NA</td>
+				<td><b>v4.1:</b> Set up better default settings for sequencing data (--pbwt_modulo 0.0005 --ibd2-maf 0.0001 --ibd2-count 10000).</td>
 			</tr>
 			<tr>
 				<td><code>--window</code></td>

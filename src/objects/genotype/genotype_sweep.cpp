@@ -21,12 +21,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <objects/genotype/genotype_header.h>
 
-void genotype::sample(vector < double > & CurrentTransProbabilities) {
-	if (rng.getDouble() < 0.5) sampleForward(CurrentTransProbabilities);
-	else sampleBackward(CurrentTransProbabilities);
+void genotype::sample(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
+	if (rng.getDouble() < 0.5) sampleForward(CurrentTransProbabilities, CurrentMissingProbabilities);
+	else sampleBackward(CurrentTransProbabilities, CurrentMissingProbabilities);
 }
 
-void genotype::sampleForward(vector < double > & CurrentTransProbabilities) {
+void genotype::sampleForward(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
 	double sumProbs = 0.0;
 	unsigned int prev_sampled = 0;
 	unsigned int curr_dipcount = 0, prev_dipcount = 1;
@@ -43,10 +43,10 @@ void genotype::sampleForward(vector < double > & CurrentTransProbabilities) {
 		toffset += prev_dipcount * curr_dipcount;
 		prev_dipcount = curr_dipcount;
 	}
-	make(DipSampled);
+	make(DipSampled, CurrentMissingProbabilities);
 }
 
-void genotype::sampleBackward(vector < double > & CurrentTransProbabilities) {
+void genotype::sampleBackward(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
 
 	double sumProbs = 0.0;
 	int next_sampled = -1;
@@ -78,7 +78,7 @@ void genotype::sampleBackward(vector < double > & CurrentTransProbabilities) {
 		}
 		next_dipcount = curr_dipcount;
 	}
-	make(DipSampled);
+	make(DipSampled, CurrentMissingProbabilities);
 }
 
 void genotype::solve() {
@@ -119,7 +119,7 @@ void genotype::solve() {
 	make(DipSampled);
 }
 
-void genotype::store(vector < double > & CurrentTransProbabilities) {
+void genotype::store(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
 	if (ProbMask.size() == 0) {
 		unsigned int countProb = 0;
 		ProbMask = vector < bool > (n_transitions, false);
@@ -128,8 +128,11 @@ void genotype::store(vector < double > & CurrentTransProbabilities) {
 			countProb++;
 		}
 		ProbStored = vector  < float > (countProb, 0.0);
+		ProbMissing = vector < float > (n_missing * HAP_NUMBER, 0.0);
 	}
 	for (unsigned int t = 0, trel = 0 ; t < n_transitions ; t ++) if (ProbMask[t]) ProbStored[trel++] += CurrentTransProbabilities[t];
+	for (unsigned int m = 0 ; m < (n_missing * HAP_NUMBER) ; m ++) ProbMissing[m] += CurrentMissingProbabilities[m];
+	nProbMissingStored ++;
 }
 
 /*

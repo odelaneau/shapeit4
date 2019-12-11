@@ -95,7 +95,7 @@ void haplotype_set::updateHaplotypes(genotype_set & G, bool first_time) {
 	tac.clock();
 	for (unsigned int i = 0 ; i < G.n_ind ; i ++) {
 		for (unsigned int v = 0 ; v < n_site ; v ++) {
-			if (first_time || (VAR_GET_AMB(MOD2(v), G.vecG[i]->Variants[DIV2(v)]))) {
+			if (first_time || (VAR_GET_HET(MOD2(v), G.vecG[i]->Variants[DIV2(v)])) || (VAR_GET_MIS(MOD2(v), G.vecG[i]->Variants[DIV2(v)]))) {
 				bool a0 = VAR_GET_HAP0(MOD2(v), G.vecG[i]->Variants[DIV2(v)]);
 				bool a1 = VAR_GET_HAP1(MOD2(v), G.vecG[i]->Variants[DIV2(v)]);
 				H_opt_hap.set(2*i+0, v, a0);

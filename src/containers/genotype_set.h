@@ -40,6 +40,7 @@ public:
 	//METHODS
 	void imputeMonomorphic(variant_map &);		//Impute to REF monomorphic variants
 	unsigned int largestNumberOfTransitions();	//Get the number of transitions in the larger genotype graph. Used to initialize memory space for multi-threading.
+	unsigned int largestNumberOfMissings();	//Get the number of transitions in the larger genotype graph. Used to initialize memory space for multi-threading.
 	unsigned long numberOfSegments();			//Total number of segments across all genotype graphs (used for verbose).
 	void masking();								//Call function mask for all genotype graphs
 	void solve();								//Call function solve for all genotype graphs

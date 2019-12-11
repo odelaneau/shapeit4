@@ -59,12 +59,13 @@ void phaser::read_files_and_initialise() {
 	M.initialise(V, options["effective-size"].as < int > (), (readerG.n_main_samples+readerG.n_ref_samples)*2);
 
 	//step4: Initialize haplotypes
-	H.parametrizePBWT(options["pbwt-depth"].as < int > (), options["pbwt-modulo"].as < double > (), options["pbwt-mac"].as < int > (), options["pbwt-mdr"].as < double > (), options["thread"].as < int > ());
+
+	H.parametrizePBWT(options["pbwt-depth"].as < int > (), pbwt_modulo, options["pbwt-mac"].as < int > (), options["pbwt-mdr"].as < double > (), options["thread"].as < int > ());
 	H.initializePBWTmapping(V);
 	H.allocatePBWTarrays();
 	H.updateHaplotypes(G, true);
 	H.transposeHaplotypes_H2V(true);
-	H.searchIBD2matching(V, options["ibd2-length"].as < double > (), options["window"].as < double > (), options["ibd2-maf"].as < double > (), options["ibd2-mdr"].as < double > (), options["ibd2-count"].as < int > ());
+	H.searchIBD2matching(V, options["ibd2-length"].as < double > (), options["window"].as < double > (), ibd2_maf, options["ibd2-mdr"].as < double > (), ibd2_count);
 	if (options.count("ibd2-output")) H.writeIBD2matching(G, options["ibd2-output"].as < string > ());
 
 	pbwt_solver solver = pbwt_solver(H);
@@ -77,5 +78,6 @@ void phaser::read_files_and_initialise() {
 
 	//step6: Allocate data structures for computations
 	unsigned int max_number_transitions = G.largestNumberOfTransitions();
-	threadData = vector < compute_job >(options["thread"].as < int > (), compute_job(V, G, H, max_number_transitions));
+	unsigned int max_number_missing = G.largestNumberOfMissings();
+	threadData = vector < compute_job >(options["thread"].as < int > (), compute_job(V, G, H, max_number_transitions, max_number_missing));
 }

@@ -58,6 +58,15 @@ unsigned int genotype_set::largestNumberOfTransitions() {
 	return maxT;
 }
 
+unsigned int genotype_set::largestNumberOfMissings() {
+	unsigned int maxM = 0;
+	for (int i = 0 ; i < n_ind ; i ++) {
+		unsigned int nMis = vecG[i]->n_missing * HAP_NUMBER;
+		if (nMis> maxM) maxM = nMis;
+	}
+	return maxM;
+}
+
 unsigned long genotype_set::numberOfSegments() {
 	unsigned long size = 0;
 	for (int i = 0 ; i < n_ind ; i ++) size += vecG[i]->n_segments;

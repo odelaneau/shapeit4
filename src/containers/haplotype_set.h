@@ -59,7 +59,7 @@ public:
 	unsigned long n_ind;		// #individuals
 
 	//PBWT parameters
-	double pbwt_modulo;		// Modulo used to store PBWT indexes (--pbwt-modulo)
+	double pbwt_modulo;				// Modulo used to store PBWT indexes (--pbwt-modulo)
 	unsigned long pbwt_depth;		// #neighbours in the PBWT to use for conditioning (--pbwt-depth)
 	unsigned long pbwt_mac;			// Minor Allele Count to consider in PBWT pass (--pbwt-mac)
 	double pbwt_mdr;				// Missinga Data Rate to consider in PBWT pass (--pbwt-mdr)

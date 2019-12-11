@@ -49,8 +49,9 @@ bool compute_job::reccursive_window_splitting(double min_length_cm, int left_ind
 	}
 }
 
-compute_job::compute_job(variant_map & _V, genotype_set & _G, haplotype_set & _H, unsigned int n_max_transitions) : V(_V), G(_G), H(_H) {
+compute_job::compute_job(variant_map & _V, genotype_set & _G, haplotype_set & _H, unsigned int n_max_transitions, unsigned int n_max_missing) : V(_V), G(_G), H(_H) {
 	T = vector < double > (n_max_transitions, 0.0);
+	M = vector < float > (n_max_missing , 0.0);
 }
 
 compute_job::~compute_job() {
@@ -74,6 +75,8 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	vector < unsigned int > loc_siz = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
 	vector < unsigned int > amb_idx = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
 	vector < unsigned int > amb_siz = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
+	vector < unsigned int > mis_idx = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
+	vector < unsigned int > mis_siz = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
 	vector < unsigned int > tra_idx = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
 	vector < unsigned int > tra_siz = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
 	vector < double > ccm_sta = vector < double >(G.vecG[ind]->n_segments, 0);
@@ -82,11 +85,15 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	vector < int > idx_sto = vector < int >(G.vecG[ind]->n_segments, 0);
 
 	unsigned int prev_dipcounts = 1, curr_dipcounts = 0;
-	for (unsigned int s = 0, a = 0, t = 0, v = 0 ; s < G.vecG[ind]->n_segments ; s ++) {
+	for (unsigned int s = 0, a = 0, t = 0, v = 0, m = 0 ; s < G.vecG[ind]->n_segments ; s ++) {
 		//update a
 		amb_idx[s] = a;
 		for (unsigned int vrel = 0 ; vrel < G.vecG[ind]->Lengths[s] ; vrel ++) amb_siz[s] += VAR_GET_AMB(MOD2(v+vrel), G.vecG[ind]->Variants[DIV2(v+vrel)]);
 		a += amb_siz[s];
+		//update m
+		mis_idx[s] = m;
+		for (unsigned int vrel = 0 ; vrel < G.vecG[ind]->Lengths[s] ; vrel ++) mis_siz[s] += VAR_GET_MIS(MOD2(v+vrel), G.vecG[ind]->Variants[DIV2(v+vrel)]);
+		m += mis_siz[s];
 		//update v
 		loc_idx[s] = v;
 		loc_siz[s] = G.vecG[ind]->Lengths[s];
@@ -110,9 +117,11 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	output.push_back(0);
 	output.push_back(G.vecG[ind]->n_segments-1);
 	reccursive_window_splitting(min_window_size, 0, G.vecG[ind]->n_segments-1, idx_sta, idx_sto, ccm_sta, ccm_sto, output);
-	//for (int w =0 ; w < output.size() ; w += 2) {
-	//	cout << w << " " << output[w] << " " << output[w+1] << endl;
-	//}
+/*
+	for (int w =0 ; w < output.size() ; w += 2) {
+		cout << w << " " << output[w] << " " << output[w+1] << endl;
+	}
+*/
 	assert(output[0] == 0);
 	assert(output.back() == G.vecG[ind]->n_segments-1);
 	for (int w = 1 ; w < output.size()-1 ; w += 2) assert(output[w+0] == output[w+1]);
@@ -126,15 +135,23 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 		C[w].stop_segment = output[2*w+1];
 		C[w].start_ambiguous = amb_idx[C[w].start_segment];
 		C[w].stop_ambiguous = amb_idx[C[w].stop_segment] + amb_siz[C[w].stop_segment] - 1;
+
+		C[w].start_missing = mis_idx[C[w].start_segment];
+		C[w].stop_missing = mis_idx[C[w].stop_segment] + mis_siz[C[w].stop_segment] - 1;
+
 		C[w].start_locus = loc_idx[C[w].start_segment];
 		C[w].stop_locus = loc_idx[C[w].stop_segment] + loc_siz[C[w].stop_segment] - 1;
 		C[w].start_transition = tra_idx[C[w].start_segment] + tra_siz[C[w].start_segment];
 		C[w].stop_transition = tra_idx[C[w].stop_segment] + tra_siz[C[w].stop_segment] - 1;
+
+		//cout << w << " " << C[w].toString() << endl;
+
 	}
-	//assert(C.back().stop_ambiguous == G.vecG[ind]->n_ambiguous - 1);
-	//assert(C.back().stop_segment == G.vecG[ind]->n_segments - 1);
-	//assert(C.back().stop_locus == G.vecG[ind]->n_variants - 1);
-	//assert(C.back().stop_transition == G.vecG[ind]->n_transitions - 1);
+	assert(C.back().stop_ambiguous == G.vecG[ind]->n_ambiguous - 1);
+	assert(C.back().stop_missing == G.vecG[ind]->n_missing - 1);
+	assert(C.back().stop_segment == G.vecG[ind]->n_segments - 1);
+	assert(C.back().stop_locus == G.vecG[ind]->n_variants - 1);
+	assert(C.back().stop_transition == G.vecG[ind]->n_transitions - 1);
 	//cout << "Done coordinates"<< endl;
 
 	//4. Update conditional haps
@@ -155,6 +172,11 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 				if (addToNext) { Kvec[w+1].push_back(cond_hap0); Kvec[w+1].push_back(cond_hap1); }
 			}
 		}
+/*
+		if (w == n_windows - 1) {
+			cout << w << " " << l << " " << Kvec[w].size() << endl;
+		}
+*/
 	}
 	/*
 	unsigned long block_size = H.pbwt_nstored * H.n_ind * 2UL;
@@ -178,7 +200,13 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	for (int w = 0 ; w < n_windows; w++) {
 		sort(Kvec[w].begin(), Kvec[w].end());
 		Kvec[w].erase(unique(Kvec[w].begin(), Kvec[w].end()), Kvec[w].end());
-		//cout << w << " " << Kvec[w].size() << endl;
+		/*
+		cout << ind << " " << w << " " << Kvec[w].size()  << "======================================================="<< endl;
+		if (w == n_windows - 1) {
+			for (int k  = 0 ; k < Kvec[w].size() ; k ++) cout << " " << Kvec[w][k];
+			cout << endl;
+		}
+		*/
 	}
 	//cout << "Done selection"<< endl;
 }
