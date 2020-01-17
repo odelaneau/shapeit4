@@ -27,8 +27,6 @@ BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 CXXFLAG=-O3 -mavx2 -mfma 
 #Portable version without avx2 (much slower)
 #CXXFLAG=-O3
-
-
 LDFLAG=-O3
 
 #DYNAMIC LIBRARIES
