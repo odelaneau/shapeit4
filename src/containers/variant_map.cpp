@@ -100,7 +100,7 @@ int variant_map::interpolateCentiMorgan(vector < int > & pos_bp, vector < double
 	double mean_rate = (pos_cM.back() - pos_cM[0]) / (pos_bp.back() - pos_bp[0]);
 
 	//Set up first positions to be mean rate
-	while (vec_pos[i_locus]->bp < pos_bp[0]) {
+	while (i_locus<vec_pos.size() && vec_pos[i_locus]->bp < pos_bp[0]) {
 		base = pos_cM[0];
 		dist = (pos_bp[0] - vec_pos[i_locus]->bp);
 		vec_pos[i_locus]->cm = base - mean_rate * dist;
