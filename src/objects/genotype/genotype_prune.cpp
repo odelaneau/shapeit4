@@ -21,8 +21,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <objects/genotype/genotype_header.h>
 
-#define MAX_AMB	32
-
 class Transition {
 public:
 	double prob;
@@ -75,7 +73,7 @@ void genotype::mapMerges(vector < double > & currProbs, double thresholdProbMass
 				if (VAR_GET_AMB(MOD2(voffset+vrel), Variants[DIV2(voffset+vrel)]))
 					n_ambiguous_merged++;
 			//Step4: check number of ambiguous variants in merged segment
-			if (n_ambiguous_merged <= MAX_AMB) {
+			if (n_ambiguous_merged < MAX_AMB) {
 				//Step5: sort transitions by decreasing order
 				for (int t = 0 ; t < n_curr_transitions ; t ++) {
 					vecTransitions[t].prob = currProbs[toffset + t];

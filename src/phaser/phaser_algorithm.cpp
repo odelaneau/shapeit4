@@ -88,7 +88,7 @@ void phaser::phaseWindow() {
 		vrb.progress("  * HMM computations", (i+1)*1.0/G.n_ind);
 	}
 	if (n_underflow_recovered) vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 1) + "+/-" + stb.str(statH.sd(), 1) + " / W=" + stb.str(statS.mean(), 2) + "Mb / U=" + stb.str(n_underflow_recovered) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
-	else vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 1) + "+/-" + stb.str(statH.sd(), 1) + " / W=" + stb.str(statS.mean(), 2) + "Mb] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+	else vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 3) + "+/-" + stb.str(statH.sd(), 3) + " / W=" + stb.str(statS.mean(), 2) + "Mb] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
 
 void phaser::phase() {

@@ -27,6 +27,7 @@
 
 //
 #define HAP_NUMBER	8
+#define MAX_AMB		22
 
 //Macros for packing/unpacking diplotypes
 #define DIP_GET(dip,idx)	(((dip)>>(idx))&1UL)

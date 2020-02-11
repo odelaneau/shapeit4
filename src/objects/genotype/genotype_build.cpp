@@ -43,64 +43,61 @@
 void genotype::build() {
 	//1. Count number of segments
 	//unsigned n_unf = 0, n_var = 0, n_sca = 0, n_seg = 0, n_amb = 0;
-	unsigned n_unf = 0, n_var = 0, n_sca = 0, n_seg = 0, n_amb = 0, n_mis = 0;
+	unsigned n_rel_unf = 0, n_rel_var = 0, n_rel_sca = 0, n_abs_seg = 0, n_abs_amb = 0, n_rel_amb = 0, n_abs_mis = 0;
 	for (unsigned int v = 0 ; v < n_variants ;) {
 		bool f_sca = VAR_GET_SCA(MOD2(v),Variants[DIV2(v)]);
 		bool f_het = VAR_GET_HET(MOD2(v),Variants[DIV2(v)]);
 		bool f_mis = VAR_GET_MIS(MOD2(v),Variants[DIV2(v)]);
 
-		//unsigned int predicted_unfold = n_unf + (f_het||f_mis) + (n_sca||f_sca);
-		unsigned int predicted_unfold = n_unf + (f_het) + (n_sca||f_sca);
-		if (predicted_unfold == 4 || (n_var == std::numeric_limits< unsigned short >::max())) {
-			n_unf = 0;
-			n_sca = 0;
-			n_var = 0;
-			n_seg ++;
+		//unsigned int predicted_unfold = n_rel_unf + f_het + (n_rel_sca||f_sca);
+		unsigned int predicted_unfold = n_rel_unf + f_het + (n_rel_sca||f_sca);
+		if (predicted_unfold == 4 || (n_rel_var == std::numeric_limits< unsigned short >::max()) || (n_rel_amb == MAX_AMB)) {
+			n_rel_unf = 0;
+			n_rel_sca = 0;
+			n_rel_var = 0;
+			n_rel_amb = 0;
+			n_abs_seg ++;
 		} else {
-			//n_unf += (f_het||f_mis);
-			n_unf += (f_het);
-			n_sca += f_sca;
-			//n_amb += (f_het||f_mis||f_sca);
-			n_amb += (f_het||f_sca);
-			n_mis += f_mis;
-			n_var ++;
+			n_rel_unf += f_het;
+			n_rel_sca += f_sca;
+			n_abs_amb += (f_het||f_sca);
+			n_rel_amb += (f_het||f_sca);
+			n_abs_mis += f_mis;
+			n_rel_var ++;
 			v++;
 		}
 	}
-	n_segments = n_seg + 1;
-	n_ambiguous = n_amb;
-	n_missing = n_mis;
-	//cout << n_missing <<  " " << n_ambiguous << endl;
+	n_segments = n_abs_seg + 1;
+	n_ambiguous = n_abs_amb;
+	n_missing = n_abs_mis;
 
 	//2. Build Segments
-	//n_unf = 0, n_var = 0, n_sca = 0, n_seg = 0, n_amb = 0;
-	n_unf = 0, n_var = 0, n_sca = 0, n_seg = 0, n_amb = 0, n_mis = 0;
+	n_rel_unf = 0; n_rel_var = 0; n_rel_sca = 0; n_abs_seg = 0; n_abs_amb = 0; n_rel_amb = 0; n_abs_mis = 0;
 	Lengths = vector < unsigned short > (n_segments, 0U);
 	for (unsigned int v = 0 ; v < n_variants ;) {
 		bool f_sca = VAR_GET_SCA(MOD2(v),Variants[DIV2(v)]);
 		bool f_het = VAR_GET_HET(MOD2(v),Variants[DIV2(v)]);
 		bool f_mis = VAR_GET_MIS(MOD2(v),Variants[DIV2(v)]);
 
-		//unsigned int predicted_unfold = n_unf + (f_het||f_mis) + (n_sca||f_sca);
-		unsigned int predicted_unfold = n_unf + (f_het) + (n_sca||f_sca);
-		if (predicted_unfold == 4 || (n_var == std::numeric_limits< unsigned short >::max())) {
-			Lengths[n_seg] = n_var;
-			n_unf = 0;
-			n_sca = 0;
-			n_var = 0;
-			n_seg ++;
+		unsigned int predicted_unfold = n_rel_unf + f_het + (n_rel_sca||f_sca);
+		if (predicted_unfold == 4 || (n_rel_var == std::numeric_limits< unsigned short >::max()) || (n_rel_amb == MAX_AMB)) {
+			Lengths[n_abs_seg] = n_rel_var;
+			n_rel_unf = 0;
+			n_rel_sca = 0;
+			n_rel_var = 0;
+			n_rel_amb = 0;
+			n_abs_seg ++;
 		} else {
-			//n_unf += (f_het||f_mis);
-			n_unf += (f_het);
-			n_sca += f_sca;
-			//n_amb += (f_het||f_mis||f_sca);
-			n_amb += (f_het||f_sca);
-			n_mis += f_mis;
-			n_var ++;
+			n_rel_unf += f_het;
+			n_rel_sca += f_sca;
+			n_abs_amb += (f_het||f_sca);
+			n_rel_amb += (f_het||f_sca);
+			n_abs_mis += f_mis;
+			n_rel_var ++;
 			v++;
 		}
 	}
-	Lengths[n_seg] = n_var;
+	Lengths[n_abs_seg] = n_rel_var;
 
 	//3. Build Ambiguous
 	Ambiguous = vector < unsigned char >(n_ambiguous, 0U);
@@ -109,7 +106,6 @@ void genotype::build() {
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel ++) {
 			bool f_sca = VAR_GET_SCA(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
 			bool f_het = VAR_GET_HET(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
-			//bool f_mis = VAR_GET_MIS(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
 			if (f_sca) {
 				for (unsigned int h = 0 ; h < HAP_NUMBER ; h ++) {
 					bool allele = (h%2)?VAR_GET_HAP1(MOD2(vabs+vrel), Variants[DIV2(vabs+vrel)]):VAR_GET_HAP0(MOD2(vabs+vrel), Variants[DIV2(vabs+vrel)]);
@@ -117,15 +113,12 @@ void genotype::build() {
 				}
 				orderedSegments[s] = 1;
 			}
-			//a0 += (f_sca + f_het + f_mis);
-			a0 += (f_sca + f_het);
+			a0 += (f_sca||f_het);
 		}
 		unsigned int n_unf = orderedSegments[s];
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel ++) {
 			bool f_sca = VAR_GET_SCA(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
 			bool f_het = VAR_GET_HET(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
-			//bool f_mis = VAR_GET_MIS(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
-			//if (f_het||f_mis) {
 			if (f_het) {
 				for (unsigned int h = 0 ; h < HAP_NUMBER ; h ++) {
 					bool allele = ((h>>n_unf)%2);
@@ -133,8 +126,7 @@ void genotype::build() {
 				}
 				n_unf++;
 			}
-			//a1 += (f_sca + f_het + f_mis);
-			a1 += (f_sca + f_het);
+			a1 += (f_sca||f_het);
 		}
 		vabs += Lengths[s];
 	}
@@ -146,7 +138,6 @@ void genotype::build() {
 		Diplotypes[s]=n_unf?MASK_SCAF:MASK_INIT;
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel ++) {
 			bool f_het = VAR_GET_HET(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
-			//bool f_mis = VAR_GET_MIS(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);
 			if (f_het) {
 				switch (n_unf) {
 				case 0: Diplotypes[s] &= MASK_UNF0; break;
@@ -154,7 +145,6 @@ void genotype::build() {
 				case 2: Diplotypes[s] &= MASK_UNF2; break;
 				}
 			}
-			//n_unf += (f_het||f_mis);
 			n_unf += f_het;
 		}
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel ++) a+=VAR_GET_AMB(MOD2(vabs+vrel),Variants[DIV2(vabs+vrel)]);

@@ -63,11 +63,12 @@ void compute_job::free () {
 	vector < coordinates > ().swap(C);
 	vector < vector < unsigned int > > ().swap(Kvec);
 }
-
+/*
 void compute_job::reset() {
 	C.clear();
 	Kvec.clear();
 }
+*/
 
 void compute_job::make(unsigned int ind, double min_window_size) {
 	//1. Mapping coordinates of each segment

@@ -45,6 +45,7 @@ void genotype::free() {
 }
 
 void genotype::make(vector < unsigned char > & DipSampled, vector < float > & CurrentMissingProbabilities) {
+
 	for (unsigned int s = 0, vabs = 0, a = 0, m = 0 ; s < n_segments ; s ++) {
 		unsigned char hap0 = DIP_HAP0(DipSampled[s]);
 		unsigned char hap1 = DIP_HAP1(DipSampled[s]);
