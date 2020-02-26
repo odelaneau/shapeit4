@@ -37,9 +37,8 @@ void hmm_parameters::initialise(variant_map & V, int Neff, int Nhap) {
 	nt = vector < double > (V.size() - 1, 0.0);
 	for (int l = 1 ; l < V.size() ; l ++) {
 		double dist_cm = V.vec_pos[l]->cm - V.vec_pos[l-1]->cm;
-		if (dist_cm <= 0) dist_cm = 0.00001;
+		if (dist_cm <= 1e-7) dist_cm = 1e-7;
 		t[l-1] = -1.0 * expm1(-0.04 * Neff * dist_cm / Nhap);
 		nt[l-1] = 1-t[l-1];
 	}
 }
-

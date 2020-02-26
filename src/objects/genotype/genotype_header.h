@@ -94,6 +94,7 @@ public:
 	vector < float > ProbStored;
 	vector < float > ProbMissing;
 	unsigned int nProbMissingStored;
+	bool double_precision;
 	//vector < float > StoredProbs;
 
 	// PHASE SETS

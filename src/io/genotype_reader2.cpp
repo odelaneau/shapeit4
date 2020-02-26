@@ -58,7 +58,8 @@ void genotype_reader::readGenotypes0(string funphased) {
 				bool mi = (gt_arr_main[i+0] == bcf_gt_missing || gt_arr_main[i+1] == bcf_gt_missing);
 				bool he = !mi && a0 != a1;
 				bool ho = !mi && a0 == a1;
-				bool ps = (mi || he) && use_PS_field;
+				//bool ps = (mi || he) && use_PS_field;
+				bool ps = he && use_PS_field;
 				bool ph = (bcf_gt_is_phased(gt_arr_main[i+0]) || bcf_gt_is_phased(gt_arr_main[i+1])) && he && PScodes.size() > 0;
 				if (a0) VAR_SET_HAP0(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
 				if (a1) VAR_SET_HAP1(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
@@ -134,7 +135,8 @@ void genotype_reader::readGenotypes1(string funphased, string freference) {
 					bool mi = (gt_arr_main[i+0] == bcf_gt_missing || gt_arr_main[i+1] == bcf_gt_missing);
 					bool he = !mi && a0 != a1;
 					bool ho = !mi && a0 == a1;
-					bool ps = (mi || he) && use_PS_field;
+					//bool ps = (mi || he) && use_PS_field;
+					bool ps = he && use_PS_field;
 					bool ph = (bcf_gt_is_phased(gt_arr_main[i+0]) || bcf_gt_is_phased(gt_arr_main[i+1])) && he && PScodes.size() > 0;
 					if (a0) VAR_SET_HAP0(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
 					if (a1) VAR_SET_HAP1(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
@@ -234,7 +236,8 @@ void genotype_reader::readGenotypes2(string funphased, string fphased) {
 				bool mi = (gt_arr_main[i+0] == bcf_gt_missing || gt_arr_main[i+1] == bcf_gt_missing);
 				bool he = !mi && a0 != a1;
 				bool ho = !mi && a0 == a1;
-				bool ps = (mi || he) && use_PS_field;
+				//bool ps = (mi || he) && use_PS_field;
+				bool ps = he && use_PS_field;
 				bool ph = (bcf_gt_is_phased(gt_arr_main[i+0]) || bcf_gt_is_phased(gt_arr_main[i+1])) && he && PScodes.size() > 0;
 				if (a0) VAR_SET_HAP0(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
 				if (a1) VAR_SET_HAP1(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
@@ -349,7 +352,8 @@ void genotype_reader::readGenotypes3(string funphased, string freference, string
 				bool mi = (gt_arr_main[i+0] == bcf_gt_missing || gt_arr_main[i+1] == bcf_gt_missing);
 				bool he = !mi && a0 != a1;
 				bool ho = !mi && a0 == a1;
-				bool ps = (mi || he) && use_PS_field;
+				//bool ps = (mi || he) && use_PS_field;
+				bool ps = he && use_PS_field;
 				bool ph = (bcf_gt_is_phased(gt_arr_main[i+0]) || bcf_gt_is_phased(gt_arr_main[i+1])) && he && PScodes.size() > 0;
 				if (a0) VAR_SET_HAP0(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
 				if (a1) VAR_SET_HAP1(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);

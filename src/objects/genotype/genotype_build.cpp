@@ -43,12 +43,13 @@
 void genotype::build() {
 	//1. Count number of segments
 	//unsigned n_unf = 0, n_var = 0, n_sca = 0, n_seg = 0, n_amb = 0;
+	double_precision = false;
 	unsigned n_rel_unf = 0, n_rel_var = 0, n_rel_sca = 0, n_abs_seg = 0, n_abs_amb = 0, n_rel_amb = 0, n_abs_mis = 0;
 	for (unsigned int v = 0 ; v < n_variants ;) {
 		bool f_sca = VAR_GET_SCA(MOD2(v),Variants[DIV2(v)]);
 		bool f_het = VAR_GET_HET(MOD2(v),Variants[DIV2(v)]);
 		bool f_mis = VAR_GET_MIS(MOD2(v),Variants[DIV2(v)]);
-
+		double_precision = double_precision || f_sca;
 		//unsigned int predicted_unfold = n_rel_unf + f_het + (n_rel_sca||f_sca);
 		unsigned int predicted_unfold = n_rel_unf + f_het + (n_rel_sca||f_sca);
 		if (predicted_unfold == 4 || (n_rel_var == std::numeric_limits< unsigned short >::max()) || (n_rel_amb == MAX_AMB)) {
