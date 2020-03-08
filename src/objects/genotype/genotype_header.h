@@ -27,6 +27,7 @@
 
 //
 #define HAP_NUMBER	8
+#define MAX_AMB		22
 
 //Macros for packing/unpacking diplotypes
 #define DIP_GET(dip,idx)	(((dip)>>(idx))&1UL)
@@ -93,6 +94,7 @@ public:
 	vector < float > ProbStored;
 	vector < float > ProbMissing;
 	unsigned int nProbMissingStored;
+	bool double_precision;
 	//vector < float > StoredProbs;
 
 	// PHASE SETS

@@ -24,6 +24,8 @@
 
 #include <vector>
 
+// CODE TAKEN FROM THERE: https://www.johndcook.com/blog/standard_deviation/
+
 class basic_stats {
 protected:
 	uint32_t m_n;

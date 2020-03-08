@@ -88,7 +88,7 @@ public:
 	~compute_job();
 
 	void free();
-	void reset();
+//	void reset();
 	void make(unsigned int, double);
 	unsigned int size();
 	void maskingTransitions(unsigned int, double);

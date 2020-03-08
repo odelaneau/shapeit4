@@ -25,7 +25,10 @@ void genotype::mask() {
 	// Check if there is PS information
 	bool toBeProcessed = false;
 	ProbabilityMask.clear();
-	for (int p = 0 ; p < PhaseSets.size() ; p ++ ) if (PhaseSets[p].ps > 0) toBeProcessed=true;
+	for (int p = 0 ; p < PhaseSets.size() ; p ++ ) if (PhaseSets[p].ps > 0) {
+		toBeProcessed=true;
+		double_precision = true;
+	}
 	if (toBeProcessed) {
 		// Allocate ProbabilityMask
 		ProbabilityMask = vector < bool > (n_transitions, true);

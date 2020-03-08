@@ -67,6 +67,11 @@
 	<div class="container">
 		<h1>Versions</h1>
 		<div class="separator"></div>
+		<p><b>Version 4.1.3</b>: Third release. Contains the following changes compared to previous version:</p>
+		<ul>
+			<li>Bug correction on phase sets. This bug was introduced by the new engin for sporadic missing data imputation.</li>
+			<li>Bug correction for scaffold functionalities. HMM computations are now double precision and not anymore single precision for samples having a scaffold.</li>
+		</ul>    
 		<p><b>Version 4.1.2</b>: Second release. Contains the following changes compared to previous version:</p>
 		<ul>
 			<li>Bug correction on the PBWT selection. The previous functions were not working well for data with a high density of variants (e.g. sequencing data). We added an option --sequencing to adjust the default parameters to what we think is adapted to sequencing data.</li>

@@ -20,7 +20,6 @@ BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 #BOOST_LIB_PO=/software/lib64/libboost_program_options.a
 
 #COMPILER & LINKER FLAGS
-
 #Best performance is achieved with this. Use it if running on the same plateform you're compiling, it's definitely worth it!
 #CXXFLAG=-O3 -march=native
 #Good performance and portable on most intel CPUs

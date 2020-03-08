@@ -51,10 +51,20 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 			vrb.error("Could not find conditioning haplotypes for [" + G.vecG[id_job]->name  + "] / check options --pbwt-* and --ibd2-*");
 		}
 
-		haplotype_segment HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
-		int outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
-		if (outcome < 0) vrb.error("Underflow impossible to recover");
-		else n_underflow_recovered += outcome;
+		int outcome = 0;
+		if (G.vecG[id_job]->double_precision) {
+			haplotype_segment_double HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
+			outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
+		} else {
+			haplotype_segment_single HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
+			outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
+		}
+
+		switch (outcome) {
+		case -2: vrb.error("Diploid underflow impossible to recover for [" + G.vecG[id_job]->name + "]");
+		case -1: vrb.error("Haploid underflow impossible to recover for [" + G.vecG[id_job]->name + "]");
+		}
+		n_underflow_recovered += outcome;
 	}
 
 	if (options.count("use-PS") && G.vecG[id_job]->ProbabilityMask.size() > 0) threadData[id_worker].maskingTransitions(id_job, options["use-PS"].as < double > ());
@@ -88,7 +98,7 @@ void phaser::phaseWindow() {
 		vrb.progress("  * HMM computations", (i+1)*1.0/G.n_ind);
 	}
 	if (n_underflow_recovered) vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 1) + "+/-" + stb.str(statH.sd(), 1) + " / W=" + stb.str(statS.mean(), 2) + "Mb / U=" + stb.str(n_underflow_recovered) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
-	else vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 1) + "+/-" + stb.str(statH.sd(), 1) + " / W=" + stb.str(statS.mean(), 2) + "Mb] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+	else vrb.bullet("HMM computations [K=" + stb.str(statH.mean(), 3) + "+/-" + stb.str(statH.sd(), 3) + " / W=" + stb.str(statS.mean(), 2) + "Mb] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
 
 void phaser::phase() {

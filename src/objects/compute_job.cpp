@@ -64,11 +64,6 @@ void compute_job::free () {
 	vector < vector < unsigned int > > ().swap(Kvec);
 }
 
-void compute_job::reset() {
-	C.clear();
-	Kvec.clear();
-}
-
 void compute_job::make(unsigned int ind, double min_window_size) {
 	//1. Mapping coordinates of each segment
 	vector < unsigned int > loc_idx = vector < unsigned int >(G.vecG[ind]->n_segments, 0);
@@ -117,16 +112,11 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	output.push_back(0);
 	output.push_back(G.vecG[ind]->n_segments-1);
 	reccursive_window_splitting(min_window_size, 0, G.vecG[ind]->n_segments-1, idx_sta, idx_sto, ccm_sta, ccm_sto, output);
-/*
-	for (int w =0 ; w < output.size() ; w += 2) {
-		cout << w << " " << output[w] << " " << output[w+1] << endl;
-	}
-*/
+
 	assert(output[0] == 0);
 	assert(output.back() == G.vecG[ind]->n_segments-1);
 	for (int w = 1 ; w < output.size()-1 ; w += 2) assert(output[w+0] == output[w+1]);
 	int n_windows = output.size()/2;
-	//cout << "N windows = " << n_windows << endl;
 
 	//3. Update coordinates
 	C = vector < coordinates > (n_windows);
@@ -143,16 +133,12 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 		C[w].stop_locus = loc_idx[C[w].stop_segment] + loc_siz[C[w].stop_segment] - 1;
 		C[w].start_transition = tra_idx[C[w].start_segment] + tra_siz[C[w].start_segment];
 		C[w].stop_transition = tra_idx[C[w].stop_segment] + tra_siz[C[w].stop_segment] - 1;
-
-		//cout << w << " " << C[w].toString() << endl;
-
 	}
 	assert(C.back().stop_ambiguous == G.vecG[ind]->n_ambiguous - 1);
 	assert(C.back().stop_missing == G.vecG[ind]->n_missing - 1);
 	assert(C.back().stop_segment == G.vecG[ind]->n_segments - 1);
 	assert(C.back().stop_locus == G.vecG[ind]->n_variants - 1);
 	assert(C.back().stop_transition == G.vecG[ind]->n_transitions - 1);
-	//cout << "Done coordinates"<< endl;
 
 	//4. Update conditional haps
 	unsigned long addr_offset = H.pbwt_nstored * H.n_ind * 2UL;
@@ -172,43 +158,11 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 				if (addToNext) { Kvec[w+1].push_back(cond_hap0); Kvec[w+1].push_back(cond_hap1); }
 			}
 		}
-/*
-		if (w == n_windows - 1) {
-			cout << w << " " << l << " " << Kvec[w].size() << endl;
-		}
-*/
 	}
-	/*
-	unsigned long block_size = H.pbwt_nstored * H.n_ind * 2UL;
-	Kvec = vector < vector < unsigned int > > (n_windows);
-	for (int d = 0 ; d < H.pbwt_depth ; d ++) {
-		for (int h = 0; h < 2; h++) {
-			unsigned long curr_hap = 2*ind+h;
-			for (int l = 0, w = 0 ; l < H.pbwt_evaluated.size() ; l ++) {
-				int abs_idx = H.pbwt_evaluated[l];
-				int rel_idx = H.pbwt_stored[l];
-				if (abs_idx > C[w].stop_locus) w++;
-				if (rel_idx>=0) {
-					int curr_cond_hap = H.pbwt_neighbours[d * block_size + curr_hap*H.pbwt_nstored + rel_idx];
-					if (Kvec[w].empty() || curr_cond_hap != Kvec[w].back()) Kvec[w].push_back(curr_cond_hap);
-					if ((w+1)<n_windows && abs_idx>=C[w+1].start_locus && (Kvec[w+1].empty() || curr_cond_hap != Kvec[w+1].back())) Kvec[w+1].push_back(curr_cond_hap);
-				}
-			}
-		}
-	}
-	*/
 	for (int w = 0 ; w < n_windows; w++) {
 		sort(Kvec[w].begin(), Kvec[w].end());
 		Kvec[w].erase(unique(Kvec[w].begin(), Kvec[w].end()), Kvec[w].end());
-		/*
-		cout << ind << " " << w << " " << Kvec[w].size()  << "======================================================="<< endl;
-		if (w == n_windows - 1) {
-			for (int k  = 0 ; k < Kvec[w].size() ; k ++) cout << " " << Kvec[w][k];
-			cout << endl;
-		}
-		*/
 	}
-	//cout << "Done selection"<< endl;
 }
 
 void compute_job::maskingTransitions(unsigned int ind, double error_rate) {

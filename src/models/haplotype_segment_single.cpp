@@ -19,10 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
-#include <models/haplotype_segment.h>
+#include <models/haplotype_segment_single.h>
 
 
-haplotype_segment::haplotype_segment(genotype * _G, bitmatrix & _H, vector < unsigned int > & _idxH, coordinates & C, hmm_parameters & _M) : G(_G), H(_H), idxH(_idxH), M(_M) {
+haplotype_segment_single::haplotype_segment_single(genotype * _G, bitmatrix & _H, vector < unsigned int > & _idxH, coordinates & C, hmm_parameters & _M) : G(_G), H(_H), idxH(_idxH), M(_M) {
 	segment_first = C.start_segment;
 	segment_last = C.stop_segment;
 	locus_first = C.start_locus;
@@ -57,7 +57,7 @@ haplotype_segment::haplotype_segment(genotype * _G, bitmatrix & _H, vector < uns
 	}
 }
 
-haplotype_segment::~haplotype_segment() {
+haplotype_segment_single::~haplotype_segment_single() {
 	G = NULL;
 	segment_first = 0;
 	segment_last = 0;
@@ -89,7 +89,7 @@ haplotype_segment::~haplotype_segment() {
 	BetaSum.clear();
 }
 
-void haplotype_segment::forward() {
+void haplotype_segment_single::forward() {
 	curr_segment_index = segment_first;
 	curr_segment_locus = 0;
 	curr_abs_ambiguous = ambiguous_first;
@@ -135,7 +135,7 @@ void haplotype_segment::forward() {
 	}
 }
 
-void haplotype_segment::backward(vector < float > & missing_probabilities) {
+void haplotype_segment_single::backward(vector < float > & missing_probabilities) {
 	curr_segment_index = segment_last;
 	curr_segment_locus = G->Lengths[segment_last] - 1;
 	curr_abs_ambiguous = ambiguous_last;
@@ -192,7 +192,7 @@ void haplotype_segment::backward(vector < float > & missing_probabilities) {
 	}
 }
 
-int haplotype_segment::expectation(vector < double > & transition_probabilities, vector < float > & missing_probabilities) {
+int haplotype_segment_single::expectation(vector < double > & transition_probabilities, vector < float > & missing_probabilities) {
 	//cout << "ok1 " << n_cond_haps << endl;
 	forward();
 	//cout << "ok2" << endl;
@@ -228,7 +228,7 @@ int haplotype_segment::expectation(vector < double > & transition_probabilities,
 
 		if (curr_rel_locus != 0 && curr_segment_locus == 0) {
 			if (TRANSH()) return -1;
-			if (TRANSD(n_underflow_recovered)) return -1;
+			if (TRANSD(n_underflow_recovered)) return -2;
 			curr_dipcount = G->countDiplotypes(G->Diplotypes[curr_segment_index]);
 			n_transitions = curr_dipcount * prev_dipcount;
 			double scaling = 1.0 / sumDProbs;
