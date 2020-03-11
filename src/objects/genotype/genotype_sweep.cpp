@@ -121,26 +121,16 @@ void genotype::solve() {
 
 void genotype::store(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
 	if (ProbMask.size() == 0) {
-		unsigned int countProb = 0;
+		n_stored_transitionProbs = 0;
 		ProbMask = vector < bool > (n_transitions, false);
 		for (unsigned int t = 0 ; t < n_transitions ; t ++) if (CurrentTransProbabilities[t] >= 1e-6) {
+			n_stored_transitionProbs ++;
 			ProbMask[t] = true;
-			countProb++;
 		}
-		ProbStored = vector  < float > (countProb, 0.0);
+		ProbStored = vector  < float > (n_stored_transitionProbs, 0.0);
 		ProbMissing = vector < float > (n_missing * HAP_NUMBER, 0.0);
 	}
 	for (unsigned int t = 0, trel = 0 ; t < n_transitions ; t ++) if (ProbMask[t]) ProbStored[trel++] += CurrentTransProbabilities[t];
 	for (unsigned int m = 0 ; m < (n_missing * HAP_NUMBER) ; m ++) ProbMissing[m] += CurrentMissingProbabilities[m];
-	nProbMissingStored ++;
+	n_storage_events ++;
 }
-
-/*
-void genotype::store(vector < double > & CurrentTransProbabilities) {
-	if (StoredProbs.size() == 0) StoredProbs = vector < float > (n_transitions, 0.0);
-	for (unsigned int t = 0 ; t < n_transitions ; t ++) {
-		StoredProbs[t] += CurrentTransProbabilities[t];
-		//cout << t << " " << StoredProbs[t] << " " << CurrentTransProbabilities[t] << endl;
-	}
-}
-*/

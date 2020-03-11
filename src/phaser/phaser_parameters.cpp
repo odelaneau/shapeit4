@@ -67,6 +67,7 @@ void phaser::declare_options() {
 	bpo::options_description opt_output ("Output files");
 	opt_output.add_options()
 			("output,O", bpo::value< string >(), "Phased haplotypes in VCF/BCF format")
+			("bingraph", bpo::value< string >(), "Phased haplotypes in BIN format")
 			("log", bpo::value< string >(), "Log file");
 
 	descriptions.add(opt_base).add(opt_input).add(opt_mcmc).add(opt_pbwt).add(opt_ibd2).add(opt_hmm).add(opt_output);
@@ -97,7 +98,7 @@ void phaser::check_options() {
 	if (!options.count("region"))
 		vrb.error("You must specify a region or chromosome to phase using --region");
 
-	if (!options.count("output"))
+	if ((options.count("output")+options.count("bingraph"))==0)
 		vrb.error("You must specify a phased output file with --output");
 
 	if (options.count("seed") && options["seed"].as < int > () < 0)
@@ -137,7 +138,8 @@ void phaser::verbose_files() {
 	if (options.count("reference")) vrb.bullet("Reference VCF : [" + options["reference"].as < string > () + "]");
 	if (options.count("scaffold")) vrb.bullet("Scaffold VCF  : [" + options["scaffold"].as < string > () + "]");
 	if (options.count("map")) vrb.bullet("Genetic Map   : [" + options["map"].as < string > () + "]");
-	vrb.bullet("Output VCF    : [" + options["output"].as < string > () + "]");
+	if (options.count("output")) vrb.bullet("Output VCF    : [" + options["output"].as < string > () + "]");
+	if (options.count("bingraph")) vrb.bullet("Output BIN    : [" + options["bingraph"].as < string > () + "]");
 	if (options.count("log")) vrb.bullet("Output LOG    : [" + options["log"].as < string > () + "]");
 }
 

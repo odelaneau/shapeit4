@@ -37,7 +37,6 @@ public :
 	unsigned int cref;
 	unsigned int calt;
 	unsigned int cmis;
-	unsigned int fbin;
 
 	//CONSTRUCTOR/DESTRUCTOR
 	variant(string & chr, int bp, string & id, string & ref, string & alt, int idx);

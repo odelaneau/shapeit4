@@ -26,7 +26,8 @@ genotype::genotype(unsigned int _index) {
 	n_segments = 0;
 	n_variants = 0;
 	n_ambiguous = 0;
-	nProbMissingStored = 0;
+	n_stored_transitionProbs = 0;
+	n_storage_events = 0;
 	std::fill(curr_dipcodes, curr_dipcodes + 64, 0);
 	this->name = "";
 }
@@ -45,7 +46,6 @@ void genotype::free() {
 }
 
 void genotype::make(vector < unsigned char > & DipSampled, vector < float > & CurrentMissingProbabilities) {
-
 	for (unsigned int s = 0, vabs = 0, a = 0, m = 0 ; s < n_segments ; s ++) {
 		unsigned char hap0 = DIP_HAP0(DipSampled[s]);
 		unsigned char hap1 = DIP_HAP1(DipSampled[s]);
@@ -70,8 +70,8 @@ void genotype::make(vector < unsigned char > & DipSampled) {
 		unsigned char hap1 = DIP_HAP1(DipSampled[s]);
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel++, vabs++) {
 			if (VAR_GET_MIS(MOD2(vabs), Variants[DIV2(vabs)])) {
-				(ProbMissing[m*HAP_NUMBER+hap0]>=(0.5f*nProbMissingStored))?VAR_SET_HAP0(MOD2(vabs),Variants[DIV2(vabs)]):VAR_CLR_HAP0(MOD2(vabs),Variants[DIV2(vabs)]);
-				(ProbMissing[m*HAP_NUMBER+hap1]>=(0.5f*nProbMissingStored))?VAR_SET_HAP1(MOD2(vabs),Variants[DIV2(vabs)]):VAR_CLR_HAP1(MOD2(vabs),Variants[DIV2(vabs)]);
+				(ProbMissing[m*HAP_NUMBER+hap0]>=(0.5f*n_storage_events))?VAR_SET_HAP0(MOD2(vabs),Variants[DIV2(vabs)]):VAR_CLR_HAP0(MOD2(vabs),Variants[DIV2(vabs)]);
+				(ProbMissing[m*HAP_NUMBER+hap1]>=(0.5f*n_storage_events))?VAR_SET_HAP1(MOD2(vabs),Variants[DIV2(vabs)]):VAR_CLR_HAP1(MOD2(vabs),Variants[DIV2(vabs)]);
 				m++;
 			}
 			if (VAR_GET_AMB(MOD2(vabs), Variants[DIV2(vabs)])) {

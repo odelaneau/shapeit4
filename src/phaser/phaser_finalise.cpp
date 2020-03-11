@@ -22,6 +22,7 @@
 #include <phaser/phaser_header.h>
 
 #include <io/haplotype_writer.h>
+#include <io/graph_writer.h>
 
 void phaser::write_files_and_finalise() {
 	vrb.title("Finalization:");
@@ -35,7 +36,8 @@ void phaser::write_files_and_finalise() {
 	H.transposeHaplotypes_H2V(false);
 
 	//step1: writing best guess haplotypes in VCF/BCF file
-	haplotype_writer(H, G, V).writeHaplotypes(options["output"].as < string > ());
+	if (options.count("bingraph")) graph_writer(G, V).writeGraphs(options["bingraph"].as < string > ());
+	if (options.count("output")) haplotype_writer(H, G, V).writeHaplotypes(options["output"].as < string > ());
 
 	//step2: Measure overall running time
 	vrb.bullet("Total running time = " + stb.str(tac.abs_time()) + " seconds");

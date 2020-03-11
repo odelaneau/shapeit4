@@ -32,7 +32,6 @@ variant::variant(string & chr, int bp, string & id, string & ref, string & alt, 
 	this->cref = 0;
 	this->calt = 0;
 	this->cmis = 0;
-	this->fbin = 0;
 	cm = -1;
 }
 

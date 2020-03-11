@@ -44,7 +44,7 @@ void haplotype_writer::writeHaplotypes(string fname) {
 
 	// Create VCF header
 	bcf_hdr_append(hdr, string("##fileDate="+tac.date()).c_str());
-	bcf_hdr_append(hdr, "##source=G2H");
+	bcf_hdr_append(hdr, "##source=shapeit4.1.3");
 	bcf_hdr_append(hdr, string("##contig=<ID="+ V.vec_pos[0]->chr + ">").c_str());
 	bcf_hdr_append(hdr, "##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">");
 	bcf_hdr_append(hdr, "##INFO=<ID=AC,Number=1,Type=Integer,Description=\"Allele count\">");

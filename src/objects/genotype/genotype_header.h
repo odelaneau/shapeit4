@@ -74,14 +74,16 @@ class genotype {
 public:
 	// INTERNAL DATA
 	string name;
-	unsigned int index;					// Index in containers
-	unsigned int n_segments;			// Number of segments
-	unsigned int n_variants;			// Number of variants	(to iterate over Variants)
-	unsigned int n_ambiguous;			// Number of ambiguous variants
-	unsigned int n_missing;				// Number of missing
-	unsigned int n_transitions;			// Number of transitions
-	unsigned int n_masks;				// Number of masked transitions (either 0 or n_transitions)
-	unsigned char curr_dipcodes [64];	// List of diplotypes in a given segment
+	unsigned int index;						// Index in containers
+	unsigned int n_segments;				// Number of segments
+	unsigned int n_variants;				// Number of variants	(to iterate over Variants)
+	unsigned int n_ambiguous;				// Number of ambiguous variants
+	unsigned int n_missing;					// Number of missing
+	unsigned int n_transitions;				// Number of transitions
+	unsigned int n_stored_transitionProbs;	// Number of transition probabilities stored in memory
+	unsigned int n_storage_events;			// Number of storage having been done
+	bool double_precision;					// Are HMM computation done with double or single floating point precision?
+	unsigned char curr_dipcodes [64];		// List of diplotypes in a given segment (buffer style variable)
 
 	// VARIANT / HAPLOTYPE / DIPLOTYPE DATA
 	vector < unsigned char > Variants;		// 0.5 byte per variant
@@ -93,12 +95,9 @@ public:
 	vector < bool > ProbMask;
 	vector < float > ProbStored;
 	vector < float > ProbMissing;
-	unsigned int nProbMissingStored;
-	bool double_precision;
-	//vector < float > StoredProbs;
 
 	// PHASE SETS
-	vector < phase_set > PhaseSets;				// Phase set memberships for the ambiguous genotypes (hets, missing, scaffold, etc ...)
+	vector < phase_set > PhaseSets;			// Phase set memberships for the ambiguous genotypes (hets, missing, scaffold, etc ...)
 	vector < bool > ProbabilityMask;		// Flag non-zero transition probabilities derived from VCF phase sets
 
 	//METHODS
