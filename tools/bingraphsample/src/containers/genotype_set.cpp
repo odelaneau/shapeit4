@@ -33,6 +33,12 @@ genotype_set::~genotype_set() {
 	n_ind = 0;
 }
 
+void genotype_set::init() {
+	tac.clock();
+	for (int i = 0 ; i < vecG.size() ; i ++) vecG[i]->init();
+	vrb.bullet("HAP initializing (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+}
+
 void genotype_set::solve() {
 	tac.clock();
 	for (int i = 0 ; i < vecG.size() ; i ++) vecG[i]->solve();

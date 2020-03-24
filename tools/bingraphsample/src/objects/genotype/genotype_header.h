@@ -90,6 +90,7 @@ public:
 	void sampleForward(vector < float > &);
 	void sampleBackward(vector < float > &);
 	void solve();
+	void init();
 
 	//INLINES
 	unsigned int countDiplotypes(unsigned long);

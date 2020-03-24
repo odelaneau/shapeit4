@@ -45,16 +45,23 @@ void genotype::free() {
 	vector < unsigned short > ().swap(Lengths);
 }
 
-void genotype::makeSample(vector < unsigned char > & DipSampled) {
+void genotype::init() {
 	H0 = vector < bool > (n_variants, false);
 	H1 = vector < bool > (n_variants, false);
+	for (unsigned int v = 0 ; v < n_variants ; v ++) {
+		H0[v] = VAR_GET_HAP0(MOD2(v), Variants[DIV2(v)]);
+		H1[v] = VAR_GET_HAP1(MOD2(v), Variants[DIV2(v)]);
+	}
+}
+
+void genotype::makeSample(vector < unsigned char > & DipSampled) {
 	for (unsigned int s = 0, vabs = 0, a = 0, m = 0 ; s < n_segments ; s ++) {
 		unsigned char hap0 = DIP_HAP0(DipSampled[s]);
 		unsigned char hap1 = DIP_HAP1(DipSampled[s]);
 		for (unsigned int vrel = 0 ; vrel < Lengths[s] ; vrel++, vabs++) {
 			if (VAR_GET_MIS(MOD2(vabs), Variants[DIV2(vabs)])) {
-				H0[vabs] = (rng.getDouble()<=ProbMissing[m*HAP_NUMBER+hap0]);
-				H1[vabs] = (rng.getDouble()<=ProbMissing[m*HAP_NUMBER+hap1]);
+				H0[vabs] = ((rng.getDouble()*n_storage_events)<=ProbMissing[m*HAP_NUMBER+hap0]);
+				H1[vabs] = ((rng.getDouble()*n_storage_events)<=ProbMissing[m*HAP_NUMBER+hap1]);
 				m++;
 			}
 			if (VAR_GET_AMB(MOD2(vabs), Variants[DIV2(vabs)])) {
@@ -67,8 +74,6 @@ void genotype::makeSample(vector < unsigned char > & DipSampled) {
 }
 
 void genotype::makeBest(vector < unsigned char > & DipSampled) {
-	H0 = vector < bool > (n_variants, false);
-	H1 = vector < bool > (n_variants, false);
 	for (unsigned int s = 0, vabs = 0, a = 0, m = 0 ; s < n_segments ; s ++) {
 		unsigned char hap0 = DIP_HAP0(DipSampled[s]);
 		unsigned char hap1 = DIP_HAP1(DipSampled[s]);

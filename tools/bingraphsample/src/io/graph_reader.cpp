@@ -86,6 +86,7 @@ void graph_reader::readGraphs(string fname) {
 		fd.read(reinterpret_cast<char*>(&g->n_transitions), sizeof(g->n_transitions));
 		fd.read(reinterpret_cast<char*>(&g->n_stored_transitionProbs), sizeof(g->n_stored_transitionProbs));
 		fd.read(reinterpret_cast<char*>(&g->n_storage_events), sizeof(g->n_storage_events));
+		//cout << g->index << "\t" << g->n_segments << "\t" << g->n_variants<< "\t" << g->n_ambiguous<< "\t" << g->n_missing << "\t" << g->n_transitions << "\t" << g->n_stored_transitionProbs << "\t" << g->n_storage_events<< endl;
 
 		// allocation
 		g->Variants = vector < unsigned char > (DIV2(n_variants) + MOD2(n_variants), 0);

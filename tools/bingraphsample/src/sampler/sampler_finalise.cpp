@@ -27,6 +27,7 @@ void sampler::write_files_and_finalise() {
 	vrb.title("Finalization:");
 
 	//
+	G.init();
 	if (options.count("sample")) G.sample();
 	else G.solve();
 

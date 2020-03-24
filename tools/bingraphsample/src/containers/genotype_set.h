@@ -37,6 +37,7 @@ public:
 	genotype_set();
 	~genotype_set();
 
+	void init();
 	void solve();
 	void sample();
 };
