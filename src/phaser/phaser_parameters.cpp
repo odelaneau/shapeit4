@@ -87,7 +87,7 @@ void phaser::parse_command_line(vector < string > & args) {
 	vrb.title("SHAPEIT");
 	vrb.bullet("Author        : Olivier DELANEAU, University of Lausanne");
 	vrb.bullet("Contact       : olivier.delaneau@gmail.com");
-	vrb.bullet("Version       : 4.1.2");
+	vrb.bullet("Version       : 4.1.3");
 	vrb.bullet("Run date      : " + tac.date());
 }
 
