@@ -91,3 +91,13 @@ void genotype::makeBest(vector < unsigned char > & DipSampled) {
 		}
 	}
 }
+
+void genotype::storeCollapse() {
+	if (Collapsed.size() == 0) Collapsed = vector < unsigned short > (4*n_variants, 0);
+	for (unsigned int v = 0 ; v < n_variants ; v ++) {
+		Collapsed[4*v+0] += (!H0[v] && !H1[v]);
+		Collapsed[4*v+1] += (!H0[v] && H1[v]);
+		Collapsed[4*v+2] += (H0[v] && !H1[v]);
+		Collapsed[4*v+3] += (H0[v] && H1[v]);
+	}
+}

@@ -50,3 +50,14 @@ void genotype_set::sample() {
 	for (int i = 0 ; i < vecG.size() ; i ++) vecG[i]->sample();
 	vrb.bullet("HAP sampling (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
+
+void genotype_set::collapse(int N) {
+	tac.clock();
+	for (int i = 0 ; i < vecG.size() ; i ++) {
+		for (int n = 0 ; n < N ; n++) {
+			vecG[i]->sample();
+			vecG[i]->storeCollapse();
+		}
+	}
+	vrb.bullet("HAP collapsing (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+}

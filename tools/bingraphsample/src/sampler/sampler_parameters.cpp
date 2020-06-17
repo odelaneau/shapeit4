@@ -35,7 +35,8 @@ void sampler::declare_options() {
 	bpo::options_description opt_sample ("SAMPLING parameters");
 	opt_sample.add_options()
 			("sample", "Sample a pair of haplotypes per individual, use in combination of --seed")
-			("solve", "Output the most likely pair of haplotypes per individual");
+			("solve", "Output the most likely pair of haplotypes per individual")
+			("collapse", bpo::value<int>(), "Collapse X sampling (use it for scaffolded samples only; X < 65,000)");
 
 	bpo::options_description opt_output ("Output files");
 	opt_output.add_options()
@@ -67,8 +68,8 @@ void sampler::check_options() {
 	if (!options.count("input"))
 		vrb.error("You must specify one input file using --input");
 
-	if ((options.count("sample")+options.count("solve"))!=1)
-		vrb.error("You must specify either --sample or --solve");
+	if ((options.count("sample")+options.count("solve")+options.count("collapse"))!=1)
+		vrb.error("You must specify either --sample or --solve or --collapse");
 
 	if (options.count("seed") && options["seed"].as < int > () < 0)
 		vrb.error("Random number generator needs a positive seed value");
@@ -89,6 +90,6 @@ void sampler::verbose_options() {
 	vrb.title("Parameters:");
 	vrb.bullet("Seed    : " + stb.str(options["seed"].as < int > ()));
 	if (options.count("sample")) vrb.bullet("MODE    : Sampling using seed [" + stb.str(options["seed"].as < int > ()) + "]");
-	else vrb.bullet("MODE    : Solving");
-
+	if (options.count("solve")) vrb.bullet("MODE    : Solving");
+	if (options.count("collapse")) vrb.bullet("MODE    : Collpase haplotypes from [" + stb.str(options["collpase"].as < int > ()) + "] samplings");
 }

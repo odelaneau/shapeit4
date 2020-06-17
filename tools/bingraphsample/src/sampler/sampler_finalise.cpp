@@ -23,16 +23,31 @@
 
 #include <io/haplotype_writer.h>
 
+#define MODE_SPL	0
+#define MODE_SOL	1
+#define MODE_COL	2
+
 void sampler::write_files_and_finalise() {
 	vrb.title("Finalization:");
 
 	//
+	int mode;
 	G.init();
-	if (options.count("sample")) G.sample();
-	else G.solve();
+	if (options.count("sample")) {
+		G.sample();
+		mode = MODE_SPL;
+	}
+	if (options.count("solve")) {
+		G.solve();
+		mode = MODE_SOL;
+	}
+	if (options.count("collapse")) {
+		G.collapse(options["collapse"].as < int > ());
+		mode = MODE_COL;
+	}
 
 	//step1: writing best guess haplotypes in VCF/BCF file
-	haplotype_writer(G, V).writeHaplotypes(options["output"].as < string > (), options.count("sample"), options["seed"].as < int > ());
+	haplotype_writer(G, V).writeHaplotypes(options["output"].as < string > (), mode, options["seed"].as < int > ());
 
 	//step2: Measure overall running time
 	vrb.bullet("Total running time = " + stb.str(tac.abs_time()) + " seconds");

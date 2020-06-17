@@ -74,6 +74,7 @@ public:
 	vector < unsigned short > Lengths;		// 2 bytes per segment
 	vector < bool > H0;
 	vector < bool > H1;
+	vector < unsigned short > Collapsed;
 
 	//PHASE PROBS
 	vector < bool > ProbMask;
@@ -91,6 +92,8 @@ public:
 	void sampleBackward(vector < float > &);
 	void solve();
 	void init();
+	void storeCollapse();
+
 
 	//INLINES
 	unsigned int countDiplotypes(unsigned long);

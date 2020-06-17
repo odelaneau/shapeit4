@@ -39,7 +39,7 @@ public:
 	~haplotype_writer();
 
 	//IO
-	void writeHaplotypes(string foutput, bool, int);
+	void writeHaplotypes(string foutput, int, int);
 };
 
 #endif

@@ -40,6 +40,7 @@ public:
 	void init();
 	void solve();
 	void sample();
+	void collapse(int);
 };
 
 #endif
