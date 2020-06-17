@@ -61,7 +61,11 @@ void haplotype_writer::writeHaplotypes(string fname, int mode, int seed) {
 	bcf_hdr_append(hdr, "##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">");
 	bcf_hdr_append(hdr, "##INFO=<ID=AC,Number=1,Type=Integer,Description=\"Allele count\">");
 	bcf_hdr_append(hdr, "##INFO=<ID=CM,Number=A,Type=Float,Description=\"Interpolated cM position\">");
-	bcf_hdr_append(hdr, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Phased genotypes\">");
+	switch (mode) {
+		case MODE_SPL:	bcf_hdr_append(hdr, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Phased genotypes\">"); break;
+		case MODE_SOL:	bcf_hdr_append(hdr, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Phased genotypes\">"); break;
+		case MODE_COL:	bcf_hdr_append(hdr, "##FORMAT=<ID=PO,Number=4,Type=Float,Description=\"Phased genotypes\">"); break;
+	}
 
 	//Add samples
 	for (int i = 0 ; i < G.n_ind ; i ++) bcf_hdr_add_sample(hdr, G.vecG[i]->name.c_str());

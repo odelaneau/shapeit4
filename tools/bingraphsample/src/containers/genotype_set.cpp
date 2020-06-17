@@ -58,6 +58,7 @@ void genotype_set::collapse(int N) {
 			vecG[i]->sample();
 			vecG[i]->storeCollapse();
 		}
+		vrb.bullet("Sample [" + stb.str(i+1) + "/" + stb.str(vecG.size()) + "]");
 	}
 	vrb.bullet("HAP collapsing (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }

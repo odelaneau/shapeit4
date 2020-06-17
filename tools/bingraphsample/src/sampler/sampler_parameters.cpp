@@ -91,5 +91,5 @@ void sampler::verbose_options() {
 	vrb.bullet("Seed    : " + stb.str(options["seed"].as < int > ()));
 	if (options.count("sample")) vrb.bullet("MODE    : Sampling using seed [" + stb.str(options["seed"].as < int > ()) + "]");
 	if (options.count("solve")) vrb.bullet("MODE    : Solving");
-	if (options.count("collapse")) vrb.bullet("MODE    : Collpase haplotypes from [" + stb.str(options["collpase"].as < int > ()) + "] samplings");
+	if (options.count("collapse")) vrb.bullet("MODE    : Collpase haplotypes from [" + stb.str(options["collapse"].as < int > ()) + "] samplings");
 }
