@@ -47,6 +47,10 @@ double variant::getMAF() {
 	return min(freq, 1.0f-freq);
 }
 
+double variant::getAF() {
+	return cref * 1.0f / (cref + calt);
+}
+
 double variant::getMDR() {
 	return cmis * 1.0 / (cref + calt + cmis);
 }
@@ -58,3 +62,5 @@ bool variant::isSingleton() {
 bool variant::isMonomorphic() {
 	return (calt == 0 || cref == 0);
 }
+
+

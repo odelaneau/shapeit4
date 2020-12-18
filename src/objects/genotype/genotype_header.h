@@ -23,11 +23,6 @@
 #define _GENOTYPE_H
 
 #include <utils/otools.h>
-//#include <objects/conditioning.h>
-
-//
-#define HAP_NUMBER	8
-#define MAX_AMB		22
 
 //Macros for packing/unpacking diplotypes
 #define DIP_GET(dip,idx)	(((dip)>>(idx))&1UL)
@@ -50,6 +45,7 @@
 #define VAR_SET_MIS(e,v)	((v)|=(1<<((e)<<2)))
 #define VAR_SET_HET(e,v)	((v)|=(2<<((e)<<2)))
 #define VAR_SET_SCA(e,v)	((v)|=(3<<((e)<<2)))
+
 #define VAR_GET_HAP0(e,v)	(((v)&(4<<((e)<<2)))!=0)
 #define VAR_SET_HAP0(e,v)	((v)|=(4<<((e)<<2)))
 #define VAR_CLR_HAP0(e,v)	((e)?((v)&=191):((v)&=251))

@@ -30,61 +30,20 @@ inline static unsigned int abracadabra(const unsigned int &i1, const unsigned in
 
 class bitmatrix	{
 public:
-	unsigned long int n_bytes, n_cols, n_rows;
+	unsigned long int n_bytes, n_cols, n_rows, startAddr;
 	unsigned char * bytes;
 
-	bitmatrix() {
-		n_rows = 0;
-		n_cols = 0;
-		n_bytes = 0;
-		bytes = NULL;
-	}
+	bitmatrix();
+	~bitmatrix();
 
-	void allocate(unsigned int nrow, unsigned int ncol) {
-		n_rows = nrow + ((nrow%8)?(8-(nrow%8)):0);
-		n_cols = ncol + ((ncol%8)?(8-(ncol%8)):0);
-		n_bytes = (n_cols/8) * (unsigned long)n_rows;
-		bytes = (unsigned char*)malloc(n_bytes*sizeof(unsigned char));
-		memset(bytes, 0, n_bytes);
-	}
-
-	~bitmatrix() {
-		n_bytes = 0;
-		if (bytes != NULL) free(bytes);
-	}
-
+	int subset(bitmatrix & BM, vector < unsigned int > rows, unsigned int col_from, unsigned int col_to);
+	void getMatchHetCount(unsigned int i0, unsigned int i1, unsigned int start, unsigned int stop, int & c1, int & m1);
+	void allocate(unsigned int nrow, unsigned int ncol);
+	void allocateFast(unsigned int nrow, unsigned int ncol);
 	void set(unsigned int row, unsigned int col, unsigned char bit);
 	unsigned char get(unsigned int row, unsigned int col);
-
-
-	/*
-	 * This algorithm for transposing bit matrices is adapted from the code of Timur Kristóf
-	 * Timur Kristóf: https://github.com/venemo
-	 * Original version of the code (MIT license): https://github.com/Venemo/fecmagic/blob/master/src/binarymatrix.h
-	 * Of note, function abracadabra is the same than getMultiplyUpperPart function in the original code from Timur Kristóf.
-	 */
-	void transpose(bitmatrix & BM, unsigned int _max_row, unsigned int _max_col) {
-		unsigned int max_row = _max_row + ((_max_row%8)?(8-(_max_row%8)):0);
-		unsigned int max_col = _max_col + ((_max_col%8)?(8-(_max_col%8)):0);
-		unsigned long targetAddr, sourceAddr;
-		union { unsigned int x[2]; unsigned char b[8]; } m4x8d;
-		for (unsigned int row = 0; row < max_row; row += 8) {
-			for (unsigned int col = 0; col < max_col; col += 8) {
-				for (unsigned int i = 0; i < 8; i++) {
-					sourceAddr = (row+i) * ((unsigned long)(n_cols/8)) + col/8;
-					m4x8d.b[7 - i] = this->bytes[sourceAddr];
-				}
-				for (unsigned int i = 0; i < 7; i++) {
-					targetAddr = ((col+i) * ((unsigned long)(n_rows/8)) + (row) / 8);
-					BM.bytes[targetAddr]  = static_cast<unsigned char>(abracadabra(m4x8d.x[1] & (0x80808080 >> i), (0x02040810 << i)) & 0x0f) << 4;
-	                BM.bytes[targetAddr] |= static_cast<unsigned char>(abracadabra(m4x8d.x[0] & (0x80808080 >> i), (0x02040810 << i)) & 0x0f) << 0;
-				}
-				targetAddr = ((col+7) * ((unsigned long)(n_rows/8)) + (row) / 8);
-				BM.bytes[targetAddr]  = static_cast<unsigned char>(abracadabra((m4x8d.x[1] << 7) & (0x80808080 >> 0), (0x02040810 << 0)) & 0x0f) << 4;
-	            BM.bytes[targetAddr] |= static_cast<unsigned char>(abracadabra((m4x8d.x[0] << 7) & (0x80808080 >> 0), (0x02040810 << 0)) & 0x0f) << 0;
-			}
-		}
-	}
+	void transpose(bitmatrix & BM, unsigned int _max_row, unsigned int _max_col);
+	void transpose(bitmatrix & BM);
 };
 
 inline
@@ -98,10 +57,8 @@ void bitmatrix::set(unsigned int row, unsigned int col, unsigned char bit) {
 
 inline
 unsigned char bitmatrix::get(unsigned int row, unsigned int col) {
-	unsigned int bitcol = col  % 8;
-	unsigned long targetAddr = ((unsigned long)row) * (n_cols/8) +  col/8;
-	unsigned char result = (this->bytes[targetAddr] >> (7 - bitcol)) & 1;
-	return result;
+	unsigned long targetAddr = ((unsigned long)row) * (n_cols>>3) +  (col>>3);
+	return (this->bytes[targetAddr] >> (7 - (col%8))) & 1;
 }
 
 #endif

@@ -40,7 +40,7 @@ void phaser::read_files_and_initialise() {
 	}
 
 	//step2: Read input files
-	genotype_reader readerG(H, G, V, options["region"].as < string > (), options.count("use-PS"));
+	genotype_reader readerG(H, G, V, options["region"].as < string > (), options.count("use-PS"), options["thread"].as < int > ());
 	if (!options.count("reference")) readerG.scanGenotypes(options["input"].as < string > ());
 	else readerG.scanGenotypes(options["input"].as < string > (), options["reference"].as < string > ());
 	readerG.allocateGenotypes();
@@ -65,8 +65,6 @@ void phaser::read_files_and_initialise() {
 	H.allocatePBWTarrays();
 	H.updateHaplotypes(G, true);
 	H.transposeHaplotypes_H2V(true);
-	H.searchIBD2matching(V, options["ibd2-length"].as < double > (), options["window"].as < double > (), ibd2_maf, options["ibd2-mdr"].as < double > (), ibd2_count);
-	if (options.count("ibd2-output")) H.writeIBD2matching(G, options["ibd2-output"].as < string > ());
 
 	pbwt_solver solver = pbwt_solver(H);
 	solver.sweep(G);

@@ -84,6 +84,16 @@ public:
 	vector < coordinates > C;
 	vector < vector < unsigned int > > Kvec;
 
+	//random states
+	vector < unsigned int > O;
+	int Oiter;
+
+	//IBD2 tracking
+	vector < int > ind_ibd2;
+	vector < int > start_ibd2;
+	vector < int > end_ibd2;
+
+
 	compute_job(variant_map & , genotype_set & , haplotype_set & , unsigned int n_max_transitions , unsigned int n_max_missing);
 	~compute_job();
 

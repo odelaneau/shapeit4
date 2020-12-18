@@ -34,18 +34,18 @@ variant_map::~variant_map() {
 int variant_map::size() {
 	return vec_pos.size();
 }
-
+/*
 variant * variant_map::getByIndex (int i) {
 	return vec_pos[i];
 }
-
+*/
 vector < variant * > variant_map::getByPos (int pos) {
 	vector < variant * > vecS;
 	pair < multimap < int , variant * >::iterator , multimap < int , variant * >::iterator > ret = map_pos.equal_range(pos);
 	for (multimap < int , variant * >::iterator it = ret.first ; it != ret.second ; ++it) vecS.push_back(it->second);
 	return vecS;
 }
-
+/*
 vector < variant * > variant_map::getByRef(int pos, string & ref, string & alt) {
 	vector < variant * > vecS = vector < variant * >();
 	pair < multimap < int , variant * >::iterator , multimap < int , variant * >::iterator > ret = map_pos.equal_range(pos);
@@ -54,7 +54,7 @@ vector < variant * > variant_map::getByRef(int pos, string & ref, string & alt) 
 	}
 	return vecS;
 }
-
+*/
 void variant_map::push(variant * v) {
 	vec_pos.push_back(v);
 	map_pos.insert(pair < int , variant * > (v->bp, v));
@@ -145,6 +145,10 @@ unsigned int variant_map::length() {
 	return vec_pos.back()->bp - vec_pos[0]->bp + 1;
 }
 
+double variant_map::lengthcM() {
+	return vec_pos.back()->cm - vec_pos[0]->cm;
+}
+
 void variant_map::setGeneticMap(gmap_reader & readerGM) {
 	tac.clock();
 	int n_set = setCentiMorgan(readerGM.pos_bp, readerGM.pos_cm);
@@ -152,10 +156,12 @@ void variant_map::setGeneticMap(gmap_reader & readerGM) {
 	double baseline = vec_pos[0]->cm;
 	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= baseline;
 	vrb.bullet("cM interpolation [s=" + stb.str(n_set) + " / i=" + stb.str(n_interpolated) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
+	vrb.bullet("Region length [" + stb.str(vec_pos.back()->bp-vec_pos[0]->bp+1) + " bp / " + stb.str(vec_pos.back()->cm-vec_pos[0]->cm, 1) + " cM]");
 }
 
 void variant_map::setGeneticMap() {
 	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm = vec_pos[l]->bp * 1.0 / 1e6;
 	double baseline = vec_pos[0]->cm;
 	for (int l = 0 ; l < vec_pos.size() ; l ++) vec_pos[l]->cm -= baseline;
+	vrb.bullet("Region length [" + stb.str(vec_pos.back()->bp-vec_pos[0]->bp+1) + " bp / " + stb.str(vec_pos.back()->cm-vec_pos[0]->cm, 1) + " cM (assuming 1cM per Mb)]");
 }

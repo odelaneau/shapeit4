@@ -30,6 +30,7 @@
 class genotype_reader {
 public:
 	//DATA
+	int nthreads;
 	haplotype_set & H;
 	genotype_set & G;
 	variant_map & V;
@@ -50,7 +51,7 @@ public:
 	vector < int > PScodes;
 
 	//CONSTRUCTORS/DESCTRUCTORS
-	genotype_reader(haplotype_set &, genotype_set &, variant_map &, string regions, bool use_PS_field);
+	genotype_reader(haplotype_set &, genotype_set &, variant_map &, string regions, bool use_PS_field, int _nthreads);
 	~genotype_reader();
 
 	//IO

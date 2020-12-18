@@ -47,6 +47,7 @@ public :
 	unsigned int getMAC();
 	double getMDR();
 	double getMAF();
+	double getAF();
 };
 
 #endif

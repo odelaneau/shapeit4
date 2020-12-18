@@ -142,15 +142,18 @@ void haplotype_set::transposePBWTarrays() {
 
 void haplotype_set::selectPBWTarrays() {
 	tac.clock();
+	if (bannedPairs.size() == 0) bannedPairs = vector < vector < IBD2track > > (n_ind);
 	vector < int > B = vector < int > (n_hap, 0);
 	vector < int > D = vector < int > (n_hap, 0);
+	for (int h = 0 ; h < n_hap ; h ++) pbwt_parray[h] = h;
+	fill(pbwt_darray.begin(), pbwt_darray.end(), 0);
 	for (int l = 0 ; l < pbwt_evaluated.size() ; l ++) {
 		int u = 0, v = 0, p = l, q = l;
 
 		//PBWT PASS
 		for (int h = 0 ; h < n_hap ; h ++) {
-			int alookup = l?pbwt_parray[h]:h;
-			int dlookup = l?pbwt_darray[h]:0;
+			int alookup = pbwt_parray[h];
+			int dlookup = pbwt_darray[h];
 			if (dlookup > p) p = dlookup;
 			if (dlookup > q) q = dlookup;
 			if (!H_opt_var.get(pbwt_evaluated[l], alookup)) {
@@ -181,13 +184,13 @@ void haplotype_set::selectPBWTarrays() {
 						if ((h-offset0)>=0) {
 							hap_guess0 = pbwt_parray[h-offset0];
 							div_guess0 = max(pbwt_darray[h-offset0+1], div_guess0);
-							add_guess0 = checkIBD2matching(chap, hap_guess0, pbwt_cm[l]);
+							add_guess0 = checkIBD2matching(chap, hap_guess0, pbwt_evaluated[l]);
 							//cout << "AG0= " << hap_guess0 << " " << div_guess0 << " " << add_guess0 << endl;
 						} else { add_guess0 = 0; div_guess0 = l+1; }
 						if ((h+offset1)<n_hap) {
 							hap_guess1 = pbwt_parray[h+offset1];
 							div_guess1 = max(pbwt_darray[h+offset1], div_guess1);
-							add_guess1 = checkIBD2matching(chap, hap_guess1, pbwt_cm[l]);
+							add_guess1 = checkIBD2matching(chap, hap_guess1, pbwt_evaluated[l]);
 							//cout << "AG1= " << hap_guess0 << " " << div_guess0 << " " << add_guess0 << endl;
 						} else { add_guess1 = 0; div_guess1 = l+1; }
 						if (add_guess0 && add_guess1) {
@@ -217,87 +220,23 @@ void haplotype_set::selectPBWTarrays() {
 	vrb.bullet("PBWT selection (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
 }
 
-
-void haplotype_set::searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count) {
-	assert(pbwt_evaluated.size() > 0);
-	tac.clock();
-
-	//
-	vector < int > ibd2_evaluated;
-	vector < double > ibd2_cm;
-	for (int l = 0 ; l < n_site ; l ++) {
-		if (V.vec_pos[l]->getMAF() >= ibd2_maf && V.vec_pos[l]->getMDR() <= ibd2_mdr) {
-			ibd2_evaluated.push_back(l);
-			ibd2_cm.push_back(V.vec_pos[l]->cm);
-		}
-	}
-
-	//
-	int M = 3;
-	vector < int > U = vector < int > (M, 0);
-	vector < int > P = vector < int > (M, 0);
-	vector < int > G = vector < int > (n_ind, 0);
-	vector < vector < int > > A = vector < vector < int > > (M, vector < int > (n_ind, 0));
-	vector < vector < int > > D = vector < vector < int > > (M, vector < int > (n_ind, 0));
-	bannedPairs = vector < vector < IBD2track > > (n_ind);
-
-	for (int l = 0 ; l < ibd2_evaluated.size() ; l ++) {
-		fill(U.begin(), U.end(), 0);
-		fill(P.begin(), P.end(), l);
-		for (int i = 0 ; i < n_ind ; i ++) {
-			int alookup = l?A[0][i]:i;
-			int dlookup = l?D[0][i]:0;
-			for (int g = 0 ; g < M ; g++) if (dlookup > P[g]) P[g] = dlookup;
-			G[i] = H_opt_var.get(ibd2_evaluated[l], 2*alookup+0) + H_opt_var.get(ibd2_evaluated[l], 2*alookup+1);
-			A[G[i]][U[G[i]]] = alookup;
-			D[G[i]][U[G[i]]] = P[G[i]];
-			P[G[i]] = 0;
-			U[G[i]]++;
-		}
-		for (int g = 1, offset = U[0] ; g < M ; g++) {
-			copy(A[g].begin(), A[g].begin()+U[g], A[0].begin() + offset);
-			copy(D[g].begin(), D[g].begin()+U[g], D[0].begin() + offset);
-			offset += U[g];
-		}
-		for (int i = 1 ; i < n_ind ; i ++) {
-			int ind0 = A[0][i];
-			int ng0 = (l<(ibd2_evaluated.size()-1))?(H_opt_var.get(ibd2_evaluated[l+1], 2*ind0+0)+H_opt_var.get(ibd2_evaluated[l+1], 2*ind0+1)):-1;
-			for (int ip = i-1, div = -1 ; ip >= 0 ; ip --) {
-				if (G[ip] != G[i]) break;
-				div = max(div, D[0][ip+1]);
-				double lengthMatchCM = ibd2_cm[l] - ibd2_cm[div];
-				if (lengthMatchCM >= minLengthIBDtrack && l-div >= ibd2_count) {
-					int ind1 = A[0][ip];
-					int ng1 = (l<(ibd2_evaluated.size()-1))?(H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+0)+H_opt_var.get(ibd2_evaluated[l+1], 2*ind1+1)):-1;
-					if (ng0 < 0 || ng0 != ng1) {
-						bannedPairs[min(ind0, ind1)].push_back(IBD2track(max(ind0, ind1), ((ibd2_cm[div]-windowSize)>=0)?(ibd2_cm[div]-windowSize):0.0f, ibd2_cm[l] + windowSize));
-					}
-				} else break;
-			}
-		}
-		vrb.progress("  * IBD2 constraints ", (l+1)*1.0/ibd2_evaluated.size());
-	}
-
-	unsigned long npairstot = 0, npairsind = 0;
+void haplotype_set::mergeIBD2constraints() {
+	unsigned int n_inds_with_ibd2 = 0;
+	unsigned int n_ibd2_blocs = 0;
+	unsigned int n_ibd2_merged = 0;
 	for (int i = 0 ; i < n_ind ; i ++) {
 		sort(bannedPairs[i].begin(), bannedPairs[i].end());
-		bannedPairs[i].erase(unique(bannedPairs[i].begin(), bannedPairs[i].end()), bannedPairs[i].end());
-		//for (int i1 = 0 ; i1 < bannedPairs[i].size() ; i1 ++) cout << i << " " << bannedPairs[i][i1] << endl;
-		npairstot += bannedPairs[i].size();
-		npairsind += (bannedPairs[i].size()>0);
-	}
-	vrb.bullet("IBD2 constraints [#inds=" + stb.str(npairsind) + " / #pairs=" + stb.str(npairstot) + "] (" + stb.str(tac.rel_time()*1.0/1000, 2) + "s)");
-}
-
-void haplotype_set::writeIBD2matching(genotype_set & G, string foutput) {
-	output_file fd(foutput);
-	fd << "idx0 idx1 id0 id1 startCM stopCM lengthCM" << endl;
-	for (int i0 = 0 ; i0 < bannedPairs.size(); i0 ++) {
-		for (int i1 = 0 ; i1 < bannedPairs[i0].size(); i1 ++) {
-			fd << i0 << " " << bannedPairs[i0][i1].ind << " " << G.vecG[i0]->name << " " << G.vecG[bannedPairs[i0][i1].ind]->name << " " << bannedPairs[i0][i1].cm0 << " " << bannedPairs[i0][i1].cm1 << " " << bannedPairs[i0][i1].cm1-bannedPairs[i0][i1].cm0 << endl;
+		if (bannedPairs[i].size() > 1) {
+			for(vector < IBD2track > :: iterator it = bannedPairs[i].begin() + 1 ; it != bannedPairs[i].end() ; ) {
+				if (it->overlap(*(it-1))) {
+					(it-1)->merge(*it);
+					it = bannedPairs[i].erase(it);
+					n_ibd2_merged++;
+				} else ++it;
+			}
 		}
+		n_ibd2_blocs += bannedPairs[i].size();
+		n_inds_with_ibd2+= (bannedPairs[i].size() > 0);
 	}
-	fd.close();
-	vrb.bullet("wrote IBD2 constraints in file");
+	vrb.bullet("IBD2 constraints [#inds=" + stb.str(n_inds_with_ibd2) + " / #contraints=" + stb.str(n_ibd2_blocs) + " / #merged = " + stb.str(n_ibd2_merged) + "]");
 }
-

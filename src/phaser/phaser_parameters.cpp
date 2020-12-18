@@ -37,12 +37,12 @@ void phaser::declare_options() {
 			("map,M", bpo::value< string >(), "Genetic map")
 			("region,R", bpo::value< string >(), "Target region")
 			("use-PS", bpo::value<double>(), "Informs phasing using PS field from read based phasing")
-			("sequencing", "Default parameter setting for sequencing data (e.g. high variant density)");
+			("sequencing", "Default parameter setting for sequencing data (this divides by 50 the default value of --pbwt-modulo)");
 
 	bpo::options_description opt_mcmc ("MCMC parameters");
 	opt_mcmc.add_options()
 			("mcmc-iterations", bpo::value<string>()->default_value("5b,1p,1b,1p,1b,1p,5m"), "Iteration scheme of the MCMC")
-			("mcmc-prune", bpo::value<double>()->default_value(0.999), "Pruning threshold in genotype graphs");
+			("mcmc-prune", bpo::value<double>()->default_value(0.999), "Pruning threshold for genotype graphs");
 
 	bpo::options_description opt_pbwt ("PBWT parameters");
 	opt_pbwt.add_options()
@@ -51,13 +51,13 @@ void phaser::declare_options() {
 			("pbwt-mac", bpo::value< int >()->default_value(2), "Minimal Minor Allele Count at which PBWT is evaluated")
 			("pbwt-mdr", bpo::value< double >()->default_value(0.50), "Maximal Missing Data Rate at which PBWT is evaluated");
 	
-	bpo::options_description opt_ibd2 ("IBD2 parameters");
+	bpo::options_description opt_ibd2 ("IBD2 parameters [DEPRECATED]");
 	opt_ibd2.add_options()
-			("ibd2-length", bpo::value< double >()->default_value(3), "Minimal size of IBD2 tracks for building copying constraints")
-			("ibd2-maf", bpo::value< double >()->default_value(0.01), "Minimal Minor Allele Frequency for variants to be considered in the IBD2 mapping")
-			("ibd2-mdr", bpo::value< double >()->default_value(0.50), "Maximal Missing data rate for variants to be considered in the IBD2 mapping")
-			("ibd2-count", bpo::value< int >()->default_value(150), "Minimal number of filtered variants in IBD2 tracks")
-			("ibd2-output", bpo::value< string >(), "Output all IBD2 constraints in the specified file (useful for debugging!)");
+			("ibd2-length", bpo::value< double >()->default_value(3), "DEPRECATED")
+			("ibd2-maf", bpo::value< double >()->default_value(0.01), "DEPRECATED")
+			("ibd2-mdr", bpo::value< double >()->default_value(0.50), "DEPRECATED")
+			("ibd2-count", bpo::value< int >()->default_value(100), "DEPRECATED")
+			("ibd2-output", bpo::value< string >(), "DEPRECATED");
 
 	bpo::options_description opt_hmm ("HMM parameters");
 	opt_hmm.add_options()
@@ -67,7 +67,7 @@ void phaser::declare_options() {
 	bpo::options_description opt_output ("Output files");
 	opt_output.add_options()
 			("output,O", bpo::value< string >(), "Phased haplotypes in VCF/BCF format")
-			("bingraph", bpo::value< string >(), "Phased haplotypes in BIN format")
+			("bingraph", bpo::value< string >(), "Phased haplotypes in BIN format [Useful to sample multiple likely haplotype configurations per sample]")
 			("log", bpo::value< string >(), "Log file");
 
 	descriptions.add(opt_base).add(opt_input).add(opt_mcmc).add(opt_pbwt).add(opt_ibd2).add(opt_hmm).add(opt_output);
@@ -87,7 +87,7 @@ void phaser::parse_command_line(vector < string > & args) {
 	vrb.title("SHAPEIT");
 	vrb.bullet("Author        : Olivier DELANEAU, University of Lausanne");
 	vrb.bullet("Contact       : olivier.delaneau@gmail.com");
-	vrb.bullet("Version       : 4.1.3");
+	vrb.bullet("Version       : 4.2.0");
 	vrb.bullet("Run date      : " + tac.date());
 }
 
@@ -117,17 +117,15 @@ void phaser::check_options() {
 		vrb.error("You must specify a window size comprised between 0.5 and 10 cM");
 
 	pbwt_modulo = options["pbwt-modulo"].as < double > ();
-	ibd2_maf = options["ibd2-maf"].as < double > ();
-	ibd2_count = options["ibd2-count"].as < int > ();
 	if (options.count("sequencing")) {
-		pbwt_modulo = 0.0005;
-		ibd2_maf = 0.0001;
-		ibd2_count = 10000;
+		pbwt_modulo /= 50.0f;
 	}
 
 	if (!options["pbwt-modulo"].defaulted()) pbwt_modulo = options["pbwt-modulo"].as < double > ();
-	if (!options["ibd2-maf"].defaulted()) ibd2_maf = options["ibd2-maf"].as < double > ();
-	if (!options["ibd2-count"].defaulted()) ibd2_count = options["ibd2-count"].as < int > ();
+
+	if (!options["ibd2-length"].defaulted() || !options["ibd2-maf"].defaulted() || !options["ibd2-mdr"].defaulted() || !options["ibd2-count"].defaulted() || options.count("ibd2-output"))
+		vrb.warning("All --ibd2-* options are deprecated. Not used anymore as SHAPEIT versions >= 4.2.0 incorporates better methods for mapping IBD2 tracks");
+
 
 	parse_iteration_scheme(options["mcmc-iterations"].as < string > ());
 }
@@ -157,9 +155,9 @@ void phaser::verbose_options() {
 #ifdef __AVX2__
 	vrb.bullet("HMM     : AVX2 optimization active");
 #else
-	vrb.bullet("HMM     : !AVX2 optimization inactive!");
+	vrb.bullet("HMM     : AVX2 optimization inactive / Activating AVX2 substantially improves performance");
 #endif
-	vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(ibd2_count) + " / MAF>=" + stb.str(ibd2_maf, 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
-	if (options.count("ibd2-output")) vrb.bullet("IBD2    : write IBD2 tracks in [" +  options["ibd2-output"].as < string > () + "]");
+	//vrb.bullet("IBD2    : length>=" + stb.str(options["ibd2-length"].as < double > (), 2) + "cM [N>="+ stb.str(ibd2_count) + " / MAF>=" + stb.str(ibd2_maf, 3) + " / MDR<=" + stb.str(options["ibd2-mdr"].as < double > (), 3) + "]");
+	//if (options.count("ibd2-output")) vrb.bullet("IBD2    : write IBD2 tracks in [" +  options["ibd2-output"].as < string > () + "]");
 
 }

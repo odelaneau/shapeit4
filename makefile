@@ -20,19 +20,24 @@ BOOST_LIB_PO=/usr/lib/x86_64-linux-gnu/libboost_program_options.a
 #BOOST_LIB_PO=/software/lib64/libboost_program_options.a
 
 #COMPILER & LINKER FLAGS
-#Best performance is achieved with this. Use it if running on the same plateform you're compiling, it's definitely worth it!
+
+#Best performance is achieved with this. Use it if running on the same plateform you're compiling.
 #CXXFLAG=-O3 -march=native
-#Good performance and portable on most intel CPUs
+
+#Good performance and portable on most CPUs
 CXXFLAG=-O3 -mavx2 -mfma 
+
 #Portable version without avx2 (much slower)
 #CXXFLAG=-O3
+
 LDFLAG=-O3
+
 
 #DYNAMIC LIBRARIES
 DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
 
 #SHAPEIT SOURCES & BINARY
-BFILE=bin/shapeit4
+BFILE=bin/shapeit4.2
 HFILE=$(shell find src -name *.h)
 CFILE=$(shell find src -name *.cpp)
 OFILE=$(shell for file in `find src -name *.cpp`; do echo obj/$$(basename $$file .cpp).o; done)

@@ -21,6 +21,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <objects/compute_job.h>
 
+#define MAX_OVERLAP_HETS	0.9f
+
 bool compute_job::reccursive_window_splitting(double min_length_cm, int left_index, int right_index, vector < int > & idx_sta, vector < int > & idx_sto, vector < double > & ccm_sta, vector < double > & ccm_sto, vector < int > & output) {
 	int number_of_segments = right_index-left_index+1;
 	int number_of_variants = idx_sto[right_index] - idx_sta[left_index] + 1;
@@ -52,6 +54,9 @@ bool compute_job::reccursive_window_splitting(double min_length_cm, int left_ind
 compute_job::compute_job(variant_map & _V, genotype_set & _G, haplotype_set & _H, unsigned int n_max_transitions, unsigned int n_max_missing) : V(_V), G(_G), H(_H) {
 	T = vector < double > (n_max_transitions, 0.0);
 	M = vector < float > (n_max_missing , 0.0);
+	O = vector < unsigned int > (H.n_hap);
+	iota(O.begin(), O.end(), 0);
+	Oiter = 0;
 }
 
 compute_job::~compute_job() {
@@ -60,6 +65,7 @@ compute_job::~compute_job() {
 
 void compute_job::free () {
 	vector < double > ().swap(T);
+	vector < float > ().swap(M);
 	vector < coordinates > ().swap(C);
 	vector < vector < unsigned int > > ().swap(Kvec);
 }
@@ -113,9 +119,9 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 	output.push_back(G.vecG[ind]->n_segments-1);
 	reccursive_window_splitting(min_window_size, 0, G.vecG[ind]->n_segments-1, idx_sta, idx_sto, ccm_sta, ccm_sto, output);
 
-	assert(output[0] == 0);
-	assert(output.back() == G.vecG[ind]->n_segments-1);
-	for (int w = 1 ; w < output.size()-1 ; w += 2) assert(output[w+0] == output[w+1]);
+	//assert(output[0] == 0);
+	//assert(output.back() == G.vecG[ind]->n_segments-1);
+	//for (int w = 1 ; w < output.size()-1 ; w += 2) assert(output[w+0] == output[w+1]);
 	int n_windows = output.size()/2;
 
 	//3. Update coordinates
@@ -134,11 +140,6 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 		C[w].start_transition = tra_idx[C[w].start_segment] + tra_siz[C[w].start_segment];
 		C[w].stop_transition = tra_idx[C[w].stop_segment] + tra_siz[C[w].stop_segment] - 1;
 	}
-	assert(C.back().stop_ambiguous == G.vecG[ind]->n_ambiguous - 1);
-	assert(C.back().stop_missing == G.vecG[ind]->n_missing - 1);
-	assert(C.back().stop_segment == G.vecG[ind]->n_segments - 1);
-	assert(C.back().stop_locus == G.vecG[ind]->n_variants - 1);
-	assert(C.back().stop_transition == G.vecG[ind]->n_transitions - 1);
 
 	//4. Update conditional haps
 	unsigned long addr_offset = H.pbwt_nstored * H.n_ind * 2UL;
@@ -159,9 +160,60 @@ void compute_job::make(unsigned int ind, double min_window_size) {
 			}
 		}
 	}
+
+	//5. Protect for IBD2
+	ind_ibd2.clear();
+	start_ibd2.clear();
+	end_ibd2.clear();
+	vector < int > nToBeRemoved = vector < int > (n_windows, 0);
 	for (int w = 0 ; w < n_windows; w++) {
+
+		//Remove duplicates
 		sort(Kvec[w].begin(), Kvec[w].end());
 		Kvec[w].erase(unique(Kvec[w].begin(), Kvec[w].end()), Kvec[w].end());
+
+		//Identify potential IBD2 haps
+		int count_het, match_het;
+		vector < bool > vToBeRemoved = vector < bool > (Kvec[w].size(), false);
+		for (int k=1; k< Kvec[w].size() ; k++) {
+			unsigned int ind0 = Kvec[w][k-1]/2;
+			unsigned int ind1 = Kvec[w][k]/2;
+			if (ind0==ind1) {
+				H.H_opt_hap.getMatchHetCount(ind, ind0, C[w].start_locus, C[w].stop_locus, count_het, match_het);
+				assert(match_het <= count_het);
+				float perc_matching_hets = (count_het - match_het) * 1.0f / count_het;
+				if (perc_matching_hets > MAX_OVERLAP_HETS) {
+					//Flag the IBD2 matching for removal
+					nToBeRemoved[w]+=2;
+					vToBeRemoved[k-1]=true;
+					vToBeRemoved[k]=true;
+					//Flag the IBD2 matching for PBWT
+					int length_of_region = C[w].stop_locus - C[w].start_locus;
+					ind_ibd2.push_back(ind0);
+					start_ibd2.push_back(C[w].start_locus - length_of_region/2);
+					end_ibd2.push_back(C[w].stop_locus + length_of_region/2);
+				}
+			}
+		}
+
+		//Remove potential IBD2 haps from conditioning set
+		if (nToBeRemoved[w]>0) {
+			vector < unsigned int > Ktmp; Ktmp.reserve(Kvec[w].size()-nToBeRemoved[w]);
+			for (int k=0; k< Kvec[w].size() ; k++) if (!vToBeRemoved[k]) Ktmp.push_back(Kvec[w][k]);
+			Kvec[w] = Ktmp;
+		}
+	}
+
+	//6. Add new random haps
+	for (int w = 0 ; w < n_windows; w++) {
+		if (nToBeRemoved[w] > 0) {
+			for (int k = 0 ; k < nToBeRemoved[w] ; k ++) {
+				if ((O[Oiter]/2)!=ind) Kvec[w].push_back(O[Oiter]);
+				Oiter=(Oiter<(H.n_hap-1))?Oiter+1:0;
+			}
+			sort(Kvec[w].begin(), Kvec[w].end());
+			Kvec[w].erase(unique(Kvec[w].begin(), Kvec[w].end()), Kvec[w].end());
+		}
 	}
 }
 

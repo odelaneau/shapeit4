@@ -28,6 +28,7 @@
 void genotype_reader::readGenotypes0(string funphased) {
 	tac.clock();
 	bcf_srs_t * sr =  bcf_sr_init();
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	bcf_sr_set_regions(sr, region.c_str(), 0);
 	bcf_sr_add_reader(sr, funphased.c_str());
 	for (int i = 0 ; i < n_main_samples ; i ++) G.vecG[i]->name = string(sr->readers[0].header->samples[i]);
@@ -58,7 +59,6 @@ void genotype_reader::readGenotypes0(string funphased) {
 				bool mi = (gt_arr_main[i+0] == bcf_gt_missing || gt_arr_main[i+1] == bcf_gt_missing);
 				bool he = !mi && a0 != a1;
 				bool ho = !mi && a0 == a1;
-				//bool ps = (mi || he) && use_PS_field;
 				bool ps = he && use_PS_field;
 				bool ph = (bcf_gt_is_phased(gt_arr_main[i+0]) || bcf_gt_is_phased(gt_arr_main[i+1])) && he && PScodes.size() > 0;
 				if (a0) VAR_SET_HAP0(MOD2(i_variant), G.vecG[DIV2(i)]->Variants[DIV2(i_variant)]);
@@ -99,6 +99,7 @@ void genotype_reader::readGenotypes0(string funphased) {
 void genotype_reader::readGenotypes1(string funphased, string freference) {
 	tac.clock();
 	bcf_srs_t * sr =  bcf_sr_init();
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	sr->collapse = COLLAPSE_NONE;
 	sr->require_index = 1;
 	bcf_sr_set_regions(sr, region.c_str(), 0);
@@ -190,6 +191,7 @@ void genotype_reader::readGenotypes1(string funphased, string freference) {
 void genotype_reader::readGenotypes2(string funphased, string fphased) {
 	tac.clock();
 	bcf_srs_t * sr =  bcf_sr_init();
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	sr->collapse = COLLAPSE_NONE;
 	sr->require_index = 1;
 	bcf_sr_set_regions(sr, region.c_str(), 0);
@@ -303,6 +305,7 @@ void genotype_reader::readGenotypes2(string funphased, string fphased) {
 void genotype_reader::readGenotypes3(string funphased, string freference, string fphased) {
 	tac.clock();
 	bcf_srs_t * sr =  bcf_sr_init();
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	sr->collapse = COLLAPSE_NONE;
 	sr->require_index = 1;
 	bcf_sr_set_regions(sr, region.c_str(), 0);

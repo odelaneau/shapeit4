@@ -22,7 +22,7 @@
 #include <objects/genotype/genotype_header.h>
 
 void genotype::sample(vector < double > & CurrentTransProbabilities, vector < float > & CurrentMissingProbabilities) {
-	if (rng.getDouble() < 0.5) sampleForward(CurrentTransProbabilities, CurrentMissingProbabilities);
+	if (rng.getDouble() < 0.5f) sampleForward(CurrentTransProbabilities, CurrentMissingProbabilities);
 	else sampleBackward(CurrentTransProbabilities, CurrentMissingProbabilities);
 }
 
@@ -94,7 +94,7 @@ void genotype::solve() {
 			int prev_dip = t/curr_dipcount;
 			int next_dip = t%curr_dipcount;
 			//double currProb = (s?maxProbs[s-1][prev_dip]:1.0) * StoredProbs[t+toffset];
-			double currProb = (s?maxProbs[s-1][prev_dip]:1.0) * (ProbMask[t+toffset]?ProbStored[trel++]:5e-7);
+			double currProb = (s?maxProbs[s-1][prev_dip]:1.0) * (ProbMask[t+toffset]?ProbStored[trel++]:1e-6);
 			if (currProb > maxProbs[s][next_dip]) {
 				maxProbs[s][next_dip] = currProb;
 				maxIndexes[s][next_dip] = prev_dip;
@@ -130,7 +130,10 @@ void genotype::store(vector < double > & CurrentTransProbabilities, vector < flo
 		ProbStored = vector  < float > (n_stored_transitionProbs, 0.0);
 		ProbMissing = vector < float > (n_missing * HAP_NUMBER, 0.0);
 	}
-	for (unsigned int t = 0, trel = 0 ; t < n_transitions ; t ++) if (ProbMask[t]) ProbStored[trel++] += CurrentTransProbabilities[t];
+	for (unsigned int t = 0, trel = 0 ; t < n_transitions ; t ++) {
+		if (ProbMask[t]) ProbStored[trel++] += CurrentTransProbabilities[t];
+		//if (!ProbMask[t] && CurrentTransProbabilities[t] > 0.01) cout << "Should be stored " << CurrentTransProbabilities[t] << endl;
+	}
 	for (unsigned int m = 0 ; m < (n_missing * HAP_NUMBER) ; m ++) ProbMissing[m] += CurrentMissingProbabilities[m];
 	n_storage_events ++;
 }

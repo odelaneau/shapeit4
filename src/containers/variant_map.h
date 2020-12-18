@@ -39,14 +39,15 @@ public :
 	//METHODS
 	int size();
 	vector < variant * > getByPos(int);
-	vector < variant * > getByRef(int, string &, string &);
-	variant * getByIndex(int);
+	//vector < variant * > getByRef(int, string &, string &);
+	//variant * getByIndex(int);
 	void push(variant *);
 	void setGeneticMap(gmap_reader&);
 	void setGeneticMap();
 	int setCentiMorgan(vector < int > & pos_bp, vector < double > & pos_cM);
 	int interpolateCentiMorgan(vector < int > & pos_bp, vector < double > & pos_cM);
 	unsigned int length();
+	double lengthcM();
 };
 
 #endif

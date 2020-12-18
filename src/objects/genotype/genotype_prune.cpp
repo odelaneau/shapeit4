@@ -84,7 +84,7 @@ void genotype::mapMerges(vector < double > & currProbs, double thresholdProbMass
 				vecTransStatistics[s-1].entropy = 0.0;
 				for (int t = 0 ; t < n_curr_transitions ; t ++) {
 					double cProb = vecTransitions[t].prob;
-					double lProb = -1.0 * ((cProb==0.0)?0:log10(cProb));
+					double lProb = -1.0 * ((cProb==0.0f)?0:log10(cProb));
 					vecTransStatistics[s-1].entropy += cProb * lProb;
 				}
 				//Step7: check that 8 haplotypes capture lots of the cumulative probability mass

@@ -64,8 +64,8 @@ public:
 
 	//PARAMETERS
 	double pbwt_modulo;
-	double ibd2_maf;
-	int ibd2_count;
+	//double ibd2_maf;
+	//int ibd2_count;
 
 	//
 	basic_stats statH,statS;

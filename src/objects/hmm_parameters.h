@@ -30,8 +30,11 @@
 class hmm_parameters {
 public :
 	//DATA
-	vector < double > t;
-	vector < double > nt;
+	int Neff, Nhap;
+	vector < float > t;
+	vector < float > nt;
+	vector < float > cm;
+	vector < char > rare_allele;
 	double ee;
 	double ed;
 
@@ -41,6 +44,8 @@ public :
 
 	//METHODS
 	void initialise(variant_map &, int, int);
+	float getForwardTransProb(int prev_idx, int curr_idx);
+	float getBackwardTransProb(int prev_idx, int curr_idx);
 };
 
 #endif

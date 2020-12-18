@@ -21,7 +21,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <io/genotype_reader.h>
 
-genotype_reader::genotype_reader(haplotype_set & _H, genotype_set & _G, variant_map & _V, string _region, bool _use_PS_field) : H(_H), G(_G), V(_V) {
+genotype_reader::genotype_reader(haplotype_set & _H, genotype_set & _G, variant_map & _V, string _region, bool _use_PS_field, int _nthreads) : H(_H), G(_G), V(_V) {
+	nthreads = _nthreads;
 	n_variants = 0;
 	n_main_samples = 0;
 	n_ref_samples = 0;
@@ -83,10 +84,13 @@ void genotype_reader::scanGenotypes(string fmain) {
 	vrb.wait("  * VCF/BCF scanning");
 	tac.clock();
 	bcf_srs_t * sr =  bcf_sr_init();
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	if (bcf_sr_set_regions(sr, region.c_str(), 0) == -1) vrb.error("Impossible to jump to region [" + region + "] in [" + fmain + "]");
 	if(!(bcf_sr_add_reader (sr, fmain.c_str()))) vrb.error("Problem opening index file for [" + fmain + "]");
 	n_variants = 0;
 	n_main_samples = bcf_hdr_nsamples(sr->readers[0].header);
+	if (n_main_samples < 20) vrb.error("Population based phasing for less than 20 individuals is not permitted, use a reference panel to solve this issue!");
+	if (n_main_samples < 100) vrb.warning("Population based phasing for less than 100 individuals is not recommended, use a reference panel to remove this warning!");
 	bcf1_t * line;
 	while(bcf_sr_next_line (sr)) {
 		line =  bcf_sr_get_line(sr, 0);
@@ -103,6 +107,7 @@ void genotype_reader::scanGenotypes(string fmain, string fref) {
 	bcf_srs_t * sr =  bcf_sr_init();
 	sr->collapse = COLLAPSE_NONE;
 	sr->require_index = 1;
+	if (nthreads>1) bcf_sr_set_threads(sr, nthreads);
 	if (bcf_sr_set_regions(sr, region.c_str(), 0) == -1) vrb.error("Impossible to jump to region [" + region + "] in [" + fmain + "]");
 	if(!(bcf_sr_add_reader (sr, fmain.c_str()))) vrb.error("Problem opening index file for [" + fmain + "]");
 	if(!(bcf_sr_add_reader (sr, fref.c_str()))) vrb.error("Problem opening index file for [" + fref + "]");

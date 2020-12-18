@@ -23,8 +23,8 @@
 #include <objects/hmm_parameters.h>
 
 hmm_parameters::hmm_parameters() {
-	ed = 0.0001;
-	ee = 0.9999;
+	ed = 0.0001f;
+	ee = 0.9999f;
 }
 
 hmm_parameters::~hmm_parameters() {
@@ -32,13 +32,45 @@ hmm_parameters::~hmm_parameters() {
 	nt.clear();
 }
 
-void hmm_parameters::initialise(variant_map & V, int Neff, int Nhap) {
-	t = vector < double > (V.size() - 1, 0.0);
-	nt = vector < double > (V.size() - 1, 0.0);
-	for (int l = 1 ; l < V.size() ; l ++) {
-		double dist_cm = V.vec_pos[l]->cm - V.vec_pos[l-1]->cm;
+void hmm_parameters::initialise(variant_map & V, int _Neff, int _Nhap) {
+	Neff = _Neff; Nhap = _Nhap;
+	cm = vector < float > (V.size(), 0.0);
+	for (int l = 0 ; l < V.size() ; l ++) cm[l] = V.vec_pos[l]->cm;
+	t = vector < float > (V.size() - 1, 0.0);
+	nt = vector < float > (V.size() - 1, 0.0);
+	for (int l = 1 ; l < cm.size() ; l ++) {
+		float dist_cm = cm[l] - cm[l-1];
 		if (dist_cm <= 1e-7) dist_cm = 1e-7;
-		t[l-1] = -1.0 * expm1(-0.04 * Neff * dist_cm / Nhap);
+		t[l-1] = -1.0f * expm1f(-0.04 * Neff * dist_cm / Nhap);
 		nt[l-1] = 1-t[l-1];
 	}
+	int count_rare = 0;
+	rare_allele = vector < char > (V.size(), -1);
+	for (int l = 0 ; l < V.size() ; l ++) if (V.vec_pos[l]->getMAF() <= RARE_VARIANT_FREQ) {
+		rare_allele[l] = (V.vec_pos[l]->getAF() > 0.5f);
+		count_rare ++;
+	}
+	vrb.bullet("HMM parameters [Ne=" + stb.str(Neff) + " / Error=" + stb.str(ed) + " / #rare=" + stb.str(count_rare) + "]");
 }
+
+float hmm_parameters::getForwardTransProb(int prev_idx, int curr_idx) {
+	assert(curr_idx>prev_idx);
+	if (curr_idx == (prev_idx + 1)) return t[prev_idx];
+	else {
+		float dist_cm = cm[curr_idx] - cm[prev_idx];
+		if (dist_cm <= 1e-7) dist_cm = 1e-7;
+		return -1.0f * expm1f(-0.04 * Neff * dist_cm / Nhap);
+	}
+}
+
+float hmm_parameters::getBackwardTransProb(int prev_idx, int curr_idx) {
+	assert(curr_idx<prev_idx);
+	if (curr_idx == (prev_idx - 1)) return t[curr_idx];
+	else {
+		float dist_cm = cm[prev_idx] - cm[curr_idx];
+		if (dist_cm <= 1e-7) dist_cm = 1e-7;
+		return -1.0f * expm1f(-0.04 * Neff * dist_cm / Nhap);
+	}
+}
+
+

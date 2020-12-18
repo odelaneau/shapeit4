@@ -29,24 +29,30 @@
 #include <containers/variant_map.h>
 
 struct IBD2track {
-	int ind;
-	float cm0, cm1;
+	int ind, from, to;
 
-	IBD2track(int _ind, float _cm0, float _cm1) {
+	IBD2track(int _ind, int _from, int _to) {
 		ind = _ind;
-		cm0 = _cm0;
-		cm1 = _cm1;
+		from = _from;
+		to = _to;
 	}
 
 	bool operator<(const IBD2track & rhs) const {
 		if (ind < rhs.ind) return true;
 		if (ind > rhs.ind) return false;
-		return (cm0 < rhs.cm0);
+		return (from < rhs.from);
 	}
 
-	bool operator==(const IBD2track & rhs) const {
-		return (ind == rhs.ind && cm0 == rhs.cm0 && cm1 == rhs.cm1);
+	bool overlap (const IBD2track & rhs) const {
+		return ((ind==rhs.ind) && (rhs.to >= from) && (rhs.from <= to));
 	}
+
+	bool merge (const IBD2track & rhs) {
+		from = min(from, rhs.from);
+		to = max(to, rhs.to);
+	}
+
+
 } ;
 
 class haplotype_set {
@@ -92,9 +98,10 @@ public:
 	void transposePBWTarrays();
 
 	//IBD2 routines
-	void searchIBD2matching(variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count);
-	void writeIBD2matching(genotype_set & G, string);
-	bool checkIBD2matching(int, int, double);
+	//void searchIBD2matching(genotype_set & G, variant_map & V, double minLengthIBDtrack, double windowSize, double ibd2_maf, double ibd2_mdr, int ibd2_count);
+	//void writeIBD2matching(genotype_set & G, string);
+	void mergeIBD2constraints();
+	bool checkIBD2matching(int, int, int);
 
 	//Haplotype routines
 	void updateHaplotypes(genotype_set & G, bool first_time = false);
@@ -103,14 +110,14 @@ public:
 };
 
 inline
-bool haplotype_set::checkIBD2matching(int mh, int ch, double pos) {
+bool haplotype_set::checkIBD2matching(int mh, int ch, int idx) {
 	int mi = min(mh/2,ch/2);
 	int ci = max(mh/2,ch/2);
-	// Prevents self copying
+	// Prevents self copying, who knows ?
 	if (mi == ci) return false;
-	// Prevents copying for IBD=2 individuals
+	// Prevents copying for IBD2 individuals
 	for (int i = 0 ; i < bannedPairs[mi].size() && bannedPairs[mi][i].ind <= ci; i ++)
-		if (bannedPairs[mi][i].ind==ci && bannedPairs[mi][i].cm0<=pos && bannedPairs[mi][i].cm1>=pos) return false;
+		if (bannedPairs[mi][i].ind==ci && bannedPairs[mi][i].from<=idx && bannedPairs[mi][i].to>=idx) return false;
 	return true;
 }
 

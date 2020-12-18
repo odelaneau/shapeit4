@@ -54,10 +54,12 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 		int outcome = 0;
 		if (G.vecG[id_job]->double_precision) {
 			haplotype_segment_double HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
-			outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
+			HS.forward();
+			outcome = HS.backward(threadData[id_worker].T, threadData[id_worker].M);
 		} else {
 			haplotype_segment_single HS(G.vecG[id_job], H.H_opt_hap, threadData[id_worker].Kvec[w], threadData[id_worker].C[w], M);
-			outcome = HS.expectation(threadData[id_worker].T, threadData[id_worker].M);
+			HS.forward();
+			outcome = HS.backward(threadData[id_worker].T, threadData[id_worker].M);
 		}
 
 		switch (outcome) {
@@ -66,6 +68,12 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 		}
 		n_underflow_recovered += outcome;
 	}
+	//Copy over IBD2 constraints into H
+	pthread_mutex_lock(&mutex_workers);
+	for (int c = 0 ; c < threadData[id_worker].ind_ibd2.size() ; c++)
+		H.bannedPairs[min(id_job, threadData[id_worker].ind_ibd2[c])].push_back(IBD2track(max(id_job, threadData[id_worker].ind_ibd2[c]), threadData[id_worker].start_ibd2[c], threadData[id_worker].end_ibd2[c]));
+	pthread_mutex_unlock(&mutex_workers);
+
 
 	if (options.count("use-PS") && G.vecG[id_job]->ProbabilityMask.size() > 0) threadData[id_worker].maskingTransitions(id_job, options["use-PS"].as < double > ());
 
@@ -111,10 +119,12 @@ void phaser::phase() {
 			case STAGE_MAIN:	vrb.title("Main iteration [" + stb.str(iter+1) + "/" + stb.str(iteration_counts[iteration_stage]) + "]"); break;
 			}
 			H.transposeHaplotypes_V2H(false);
+			//H.searchIBD2matching(G, V, min(V.lengthcM(), options["ibd2-length"].as < double > ()), options["window"].as < double > ()*0.5f, ibd2_maf, options["ibd2-mdr"].as < double > (), ibd2_count);
 			H.updatePBWTmapping();
 			H.selectPBWTarrays();
 			H.transposePBWTarrays();
 			phaseWindow();
+			H.mergeIBD2constraints();
 			H.updateHaplotypes(G);
 			H.transposeHaplotypes_H2V(false);
 			if (iteration_types[iteration_stage] == STAGE_PRUN) {

@@ -64,6 +64,11 @@ extern "C" {
 #include <utils/timer.h>
 #include <utils/verbose.h>
 
+//CONSTANTS
+#define RARE_VARIANT_FREQ	0.001f
+#define HAP_NUMBER			8
+#define MAX_AMB				22
+
 //MACROS
 #define DIV2(v)	(v>>1)
 #define MOD2(v)	(v&1)
@@ -74,7 +79,7 @@ namespace bio = boost::iostreams;
 namespace bpo = boost::program_options;
 namespace bid = boost::uuids;
 
-//MAKE SOME TOOL FULLY ACCESSIBLE THROUGHOUT THE SOFTWARE
+//MAKE SOME TOOLS FULLY ACCESSIBLE THROUGHOUT THE SOFTWARE
 #ifdef _DECLARE_TOOLBOX_HERE
 	random_number_generator rng;	//Random number generator
 	string_utils stb;				//String manipulation

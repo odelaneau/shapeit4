@@ -25,7 +25,8 @@
 #define OFILE_VCFC	1
 #define OFILE_BCFC	2
 
-haplotype_writer::haplotype_writer(haplotype_set & _H, genotype_set & _G, variant_map & _V): H(_H), G(_G), V(_V) {
+haplotype_writer::haplotype_writer(haplotype_set & _H, genotype_set & _G, variant_map & _V, int _nthreads): H(_H), G(_G), V(_V) {
+	nthreads = _nthreads;
 }
 
 haplotype_writer::~haplotype_writer() {
@@ -39,6 +40,7 @@ void haplotype_writer::writeHaplotypes(string fname) {
 	if (fname.size() > 6 && fname.substr(fname.size()-6) == "vcf.gz") { file_format = "wz"; file_type = OFILE_VCFC; }
 	if (fname.size() > 3 && fname.substr(fname.size()-3) == "bcf") { file_format = "wb"; file_type = OFILE_BCFC; }
 	htsFile * fp = hts_open(fname.c_str(),file_format.c_str());
+	if (nthreads > 1) hts_set_threads(fp, nthreads);
 	bcf_hdr_t * hdr = bcf_hdr_init("w");
 	bcf1_t *rec = bcf_init1();
 
