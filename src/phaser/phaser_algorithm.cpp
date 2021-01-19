@@ -69,10 +69,10 @@ void phaser::phaseWindow(int id_worker, int id_job) {
 		n_underflow_recovered += outcome;
 	}
 	//Copy over IBD2 constraints into H
-	pthread_mutex_lock(&mutex_workers);
+	if (options["thread"].as < int > () > 1) pthread_mutex_lock(&mutex_workers);
 	for (int c = 0 ; c < threadData[id_worker].ind_ibd2.size() ; c++)
 		H.bannedPairs[min(id_job, threadData[id_worker].ind_ibd2[c])].push_back(IBD2track(max(id_job, threadData[id_worker].ind_ibd2[c]), threadData[id_worker].start_ibd2[c], threadData[id_worker].end_ibd2[c]));
-	pthread_mutex_unlock(&mutex_workers);
+	if (options["thread"].as < int > () > 1) pthread_mutex_unlock(&mutex_workers);
 
 
 	if (options.count("use-PS") && G.vecG[id_job]->ProbabilityMask.size() > 0) threadData[id_worker].maskingTransitions(id_job, options["use-PS"].as < double > ());
