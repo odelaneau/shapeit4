@@ -66,9 +66,12 @@ void phaser::read_files_and_initialise() {
 	H.updateHaplotypes(G, true);
 	H.transposeHaplotypes_H2V(true);
 
-	pbwt_solver solver = pbwt_solver(H);
-	solver.sweep(G);
-	solver.free();
+
+	if (!options.count("pbwt-disable-init")) {
+		pbwt_solver solver = pbwt_solver(H);
+		solver.sweep(G);
+		solver.free();
+	}
 
 	//step5: Initialize genotype structures
 	builder(G, options["thread"].as < int > ()).build();
