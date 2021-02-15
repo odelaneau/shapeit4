@@ -47,7 +47,7 @@ struct IBD2track {
 		return ((ind==rhs.ind) && (rhs.to >= from) && (rhs.from <= to));
 	}
 
-	bool merge (const IBD2track & rhs) {
+	void merge (const IBD2track & rhs) {
 		from = min(from, rhs.from);
 		to = max(to, rhs.to);
 	}
