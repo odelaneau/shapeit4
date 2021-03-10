@@ -2,8 +2,8 @@
 CXX=g++ -std=c++11
 
 #HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
-HTSLIB_INC=$(HOME)/Tools/htslib-1.9
-HTSLIB_LIB=$(HOME)/Tools/htslib-1.9/libhts.a
+HTSLIB_INC=$(HOME)/Tools/htslib-1.11
+HTSLIB_LIB=$(HOME)/Tools/htslib-1.11/libhts.a
 
 #BOOST IOSTREAM & PROGRAM_OPTION LIBRARIES [SPECIFY YOUR OWN PATHS]
 BOOST_INC=/usr/include
@@ -34,7 +34,7 @@ LDFLAG=-O3
 
 
 #DYNAMIC LIBRARIES
-DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
+DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma -lcurl -lssl -lcrypto
 
 #SHAPEIT SOURCES & BINARY
 BFILE=bin/shapeit4.2

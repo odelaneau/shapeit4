@@ -56,7 +56,7 @@ void haplotype_writer::writeHaplotypes(string fname) {
 	//Add samples
 	for (int i = 0 ; i < G.n_ind ; i ++) bcf_hdr_add_sample(hdr, G.vecG[i]->name.c_str());
 	bcf_hdr_add_sample(hdr, NULL);      // to update internal structures
-	bcf_hdr_write(fp, hdr);
+	if (bcf_hdr_write(fp, hdr) < 0) vrb.error("Failing to write VCF/header");
 
 	//Add records
 	int * genotypes = (int*)malloc(bcf_hdr_nsamples(hdr)*2*sizeof(int));
@@ -85,7 +85,7 @@ void haplotype_writer::writeHaplotypes(string fname) {
 			bcf_update_info_float(hdr, rec, "CM", &val, 1);
 		}
 		bcf_update_genotypes(hdr, rec, genotypes, bcf_hdr_nsamples(hdr)*2);
-		bcf_write1(fp, hdr, rec);
+		if (bcf_write1(fp, hdr, rec) < 0) vrb.error("Failing to write VCF/record");
 		vrb.progress("  * VCF writing", (l+1)*1.0/V.size());
 	}
 	free(genotypes);
