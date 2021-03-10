@@ -10,7 +10,8 @@ SHAPEIT4 is a fast and accurate method for estimation of haplotypes (aka phasing
 
 If you use the SHAPEIT4 in your research work, please cite the following paper:
 
-O. Delaneau, M. Robinson, JF. Zagury, J. Marchini, ET. Dermitzakis. Integrative haplotype estimation with sub-linear complexity. BioRxiv 2018.
+Delaneau O., et al. Accurate, scalable and integrative haplotype estimation. Nature Communications volume 10, Article number: 5436 (2019). 
+https://www.nature.com/articles/s41467-019-13225-y
 
 ## Documentation
 
