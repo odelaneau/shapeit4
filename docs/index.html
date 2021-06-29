@@ -62,11 +62,21 @@
 	</div>
 </section>
 
+
 <!-- Section VERSIONS -->
 <section id="version" class="sections lightbg">
 	<div class="container">
 		<h1>Versions [ALWAYS USE LAST VERSION!]</h1>
 		<div class="separator"></div>
+		<p><b>Version 4.2.2</b>: Small update, it contains the following changes compared to previous version:</p>
+		<ul>
+			<li>Improvements of HMM routines introduced in v4.2.0 are now also working when using scaffold.</li>
+		</ul>    
+		<p><b>Version 4.2.1</b>: Small update, it contains the following changes compared to previous version:</p>
+		<ul>
+			<li>Fixing a bug happening when compiling using g++9 / g++10, caused by a function not returning an expected bool return statement.</li>
+			<li>Bug was not present when compiling with g++7. Thanks to Carl Nettelblad who spotted the problem.</li>
+		</ul>    
 		<p><b>Version 4.2.0</b>: Fourth release. This is a major update, it contains the following changes compared to previous version:</p>
 		<ul>
 			<li>All HMM routines have been rewritten for better performance. The method is now ~2x faster on SNP array data and more on sequencing data.</li>
