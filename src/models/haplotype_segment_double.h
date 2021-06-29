@@ -51,12 +51,14 @@ private:
 	int curr_segment_index;
 	int curr_segment_locus;
 	int curr_abs_locus;
+	int prev_abs_locus;
 	int curr_rel_locus;
 	int curr_rel_locus_offset;
 	int curr_abs_ambiguous;
 	int curr_abs_transition;
 	int curr_abs_missing;
 	int curr_rel_missing;
+
 
 	//DYNAMIC ARRAYS
 	double probSumT;
@@ -65,6 +67,7 @@ private:
 	vector < double > probSumH;
 	vector < vector < double > > Alpha;
 	vector < vector < double > > AlphaSum;
+	vector < int > AlphaLocus;
 	vector < double > AlphaSumSum;
 	vector < vector < double > > AlphaMissing;
 	vector < vector < double > > AlphaSumMissing;
@@ -75,17 +78,18 @@ private:
 	double sumHProbs;
 	double sumDProbs;
 	double g0[HAP_NUMBER], g1[HAP_NUMBER];
+	double nt, yt;
 
 	//INLINED AND UNROLLED ROUTINES
 	void INIT_HOM();
 	void INIT_AMB();
 	void INIT_MIS();
-	void RUN_HOM(bool);
-	void RUN_AMB(bool);
-	void RUN_MIS(bool);
-	void COLLAPSE_HOM(bool);
-	void COLLAPSE_AMB(bool);
-	void COLLAPSE_MIS(bool);
+	bool RUN_HOM(char);
+	void RUN_AMB();
+	void RUN_MIS();
+	void COLLAPSE_HOM();
+	void COLLAPSE_AMB();
+	void COLLAPSE_MIS();
 	void SUMK();
 	void IMPUTE(vector < float > & );
 	bool TRANS_HAP();
@@ -121,28 +125,32 @@ void haplotype_segment_double::INIT_HOM() {
 }
 
 inline
-void haplotype_segment_double::RUN_HOM(bool forward) {
+bool haplotype_segment_double::RUN_HOM(char rare_allele) {
 	bool ag = VAR_GET_HAP0(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
-	vector < double > _tFreq = vector < double >(HAP_NUMBER, M.t[curr_abs_locus-forward] / (n_cond_haps * probSumT));
-	for (int h = 0 ; h < HAP_NUMBER ; h++) _tFreq[h] *= probSumH[h];
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
-	double _mismatch = M.ed/M.ee;
-	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
-	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
-		bool ah = Hvar.get(curr_rel_locus+curr_rel_locus_offset, k);
-		for (int h = 0 ; h < HAP_NUMBER ; h++) prob[i+h] = (prob[i+h]*_nt)+_tFreq[h];
-		if (ag!=ah) for (int h = 0 ; h < HAP_NUMBER ; h++) prob[i+h] *= _mismatch;
-		for (int h = 0 ; h < HAP_NUMBER ; h ++) probSumH[h] += prob[i+h];
+	if (rare_allele < 0 || ag == rare_allele) {
+		vector < double > _tFreq = vector < double >(HAP_NUMBER, yt / (n_cond_haps * probSumT));
+		for (int h = 0 ; h < HAP_NUMBER ; h++) _tFreq[h] *= probSumH[h];
+		double _nt = nt / probSumT;
+		double _mismatch = M.ed/M.ee;
+		fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
+		for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
+			bool ah = Hvar.get(curr_rel_locus+curr_rel_locus_offset, k);
+			for (int h = 0 ; h < HAP_NUMBER ; h++) prob[i+h] = (prob[i+h]*_nt)+_tFreq[h];
+			if (ag!=ah) for (int h = 0 ; h < HAP_NUMBER ; h++) prob[i+h] *= _mismatch;
+			for (int h = 0 ; h < HAP_NUMBER ; h ++) probSumH[h] += prob[i+h];
+		}
+		probSumT = probSumH[0] + probSumH[1] + probSumH[2] + probSumH[3] + probSumH[4] + probSumH[5] + probSumH[6] + probSumH[7];
+		return true;
 	}
-	probSumT = probSumH[0] + probSumH[1] + probSumH[2] + probSumH[3] + probSumH[4] + probSumH[5] + probSumH[6] + probSumH[7];
+	return false;
 }
 
 inline
-void haplotype_segment_double::COLLAPSE_HOM(bool forward) {
+void haplotype_segment_double::COLLAPSE_HOM() {
 	bool ag = VAR_GET_HAP0(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
-	double _tFreq = M.t[curr_abs_locus-forward] / n_cond_haps;
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	double _tFreq = yt / n_cond_haps;					////Check divide by probSumT here!
+	double _nt = nt / probSumT;
 	double _mismatch = M.ed/M.ee;
 	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
 		bool ah = Hvar.get(curr_rel_locus+curr_rel_locus_offset, k);
@@ -172,16 +180,19 @@ void haplotype_segment_double::INIT_AMB() {
 	}
 	probSumT = probSumH[0] + probSumH[1] + probSumH[2] + probSumH[3] + probSumH[4] + probSumH[5] + probSumH[6] + probSumH[7];
 }
+
 inline
-void haplotype_segment_double::RUN_AMB(bool forward) {
+void haplotype_segment_double::RUN_AMB() {
 	unsigned char amb_code = G->Ambiguous[curr_abs_ambiguous];
 	for (int h = 0 ; h < HAP_NUMBER ; h ++) {
 		g0[h] = HAP_GET(amb_code,h)?M.ed/M.ee:1.0f;
 		g1[h] = HAP_GET(amb_code,h)?1.0f:M.ed/M.ee;
 	}
-	vector < double > _tFreq = vector < double >(HAP_NUMBER, M.t[curr_abs_locus-forward] / (n_cond_haps * probSumT));
+	//vector < double > _tFreq = vector < double >(HAP_NUMBER, M.t[curr_abs_locus-forward] / (n_cond_haps * probSumT));
+	vector < double > _tFreq = vector < double >(HAP_NUMBER, yt / (n_cond_haps * probSumT));
 	for (int h = 0 ; h < HAP_NUMBER ; h++) _tFreq[h] *= probSumH[h];
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	//double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	double _nt = nt / probSumT;
 	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
 	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
 		bool ah = Hvar.get(curr_rel_locus+curr_rel_locus_offset, k);
@@ -193,14 +204,16 @@ void haplotype_segment_double::RUN_AMB(bool forward) {
 }
 
 inline
-void haplotype_segment_double::COLLAPSE_AMB(bool forward) {
+void haplotype_segment_double::COLLAPSE_AMB() {
 	unsigned char amb_code = G->Ambiguous[curr_abs_ambiguous];
 	for (int h = 0 ; h < HAP_NUMBER ; h ++) {
 		g0[h] = HAP_GET(amb_code,h)?M.ed/M.ee:1.0f;
 		g1[h] = HAP_GET(amb_code,h)?1.0f:M.ed/M.ee;
 	}
-	double _tFreq = M.t[curr_abs_locus-forward] / n_cond_haps;
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	//double _tFreq = M.t[curr_abs_locus-forward] / n_cond_haps;
+	double _tFreq = yt / n_cond_haps;
+	//double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	double _nt = nt / probSumT;
 	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
 	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
 		bool ah = Hvar.get(curr_rel_locus+curr_rel_locus_offset, k);
@@ -223,10 +236,12 @@ void haplotype_segment_double::INIT_MIS() {
 }
 
 inline
-void haplotype_segment_double::RUN_MIS(bool forward) {
-	vector < double > _tFreq = vector < double >(HAP_NUMBER, M.t[curr_abs_locus-forward] / (n_cond_haps * probSumT));
+void haplotype_segment_double::RUN_MIS() {
+	//vector < double > _tFreq = vector < double >(HAP_NUMBER, M.t[curr_abs_locus-forward] / (n_cond_haps * probSumT));
+	vector < double > _tFreq = vector < double >(HAP_NUMBER, yt / (n_cond_haps * probSumT));
 	for (int h = 0 ; h < HAP_NUMBER ; h++) _tFreq[h] *= probSumH[h];
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	//double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	double _nt = nt / probSumT;
 	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
 	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
 		for (int h = 0 ; h < HAP_NUMBER ; h++) prob[i+h] = (prob[i+h]*_nt)+_tFreq[h];
@@ -236,9 +251,11 @@ void haplotype_segment_double::RUN_MIS(bool forward) {
 }
 
 inline
-void haplotype_segment_double::COLLAPSE_MIS(bool forward) {
-	double _tFreq = M.t[curr_abs_locus-forward] / n_cond_haps;
-	double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+void haplotype_segment_double::COLLAPSE_MIS() {
+	//double _tFreq = M.t[curr_abs_locus-forward] / n_cond_haps;
+	double _tFreq = yt / n_cond_haps;
+	//double _nt = M.nt[curr_abs_locus-forward] / probSumT;
+	double _nt = nt / probSumT;
 	fill(probSumH.begin(), probSumH.begin()+HAP_NUMBER, 0.0f);
 	for(int k = 0, i = 0 ; k != n_cond_haps ; ++k, i += HAP_NUMBER) {
 		fill(prob.begin()+i, prob.begin()+i+HAP_NUMBER, (probSumK[k]*_nt)+_tFreq);
@@ -246,6 +263,7 @@ void haplotype_segment_double::COLLAPSE_MIS(bool forward) {
 	}
 	probSumT = probSumH[0] + probSumH[1] + probSumH[2] + probSumH[3] + probSumH[4] + probSumH[5] + probSumH[6] + probSumH[7];
 }
+
 
 /*******************************************************************************/
 /*****************					SUM Ks				************************/
@@ -264,13 +282,16 @@ void haplotype_segment_double::SUMK() {
 
 inline
 bool haplotype_segment_double::TRANS_HAP() {
-	sumHProbs = 0.0;
+	sumHProbs = 0.0f;
 	unsigned int  curr_rel_segment_index = curr_segment_index-segment_first;
-	double fact1 = M.nt[curr_abs_locus-1] / AlphaSumSum[curr_rel_segment_index - 1];
+	yt = M.getForwardTransProb(AlphaLocus[curr_rel_segment_index - 1], curr_abs_locus);
+	nt = 1.0f - yt;
+	//double fact1 = M.nt[curr_abs_locus-1] / AlphaSumSum[curr_rel_segment_index - 1];
+	double fact1 = nt / AlphaSumSum[curr_rel_segment_index - 1];
 	fill_n(HProbs, HAP_NUMBER*HAP_NUMBER, 0.0f);
 	for (int h1 = 0 ; h1 < HAP_NUMBER ; h1++) {
-		//__m256 _sum = _mm256_set1_ps(0.0f);
-		double fact2 = (AlphaSum[curr_rel_segment_index-1][h1]/AlphaSumSum[curr_rel_segment_index-1]) * M.t[curr_abs_locus - 1] / n_cond_haps;
+		//double fact2 = (AlphaSum[curr_rel_segment_index-1][h1]/AlphaSumSum[curr_rel_segment_index-1]) * M.t[curr_abs_locus - 1] / n_cond_haps;
+		double fact2 = (AlphaSum[curr_rel_segment_index-1][h1]/AlphaSumSum[curr_rel_segment_index-1]) * yt / n_cond_haps;
 		for (int k = 0 ; k < n_cond_haps ; k ++) {
 			for (int h2 = 0 ; h2 < HAP_NUMBER ; h2++) HProbs[h1*HAP_NUMBER+h2]+=((Alpha[curr_rel_segment_index-1][k*HAP_NUMBER + h1]*fact1 + fact2)*prob[k*HAP_NUMBER+h2]);
 		}
@@ -287,7 +308,7 @@ bool haplotype_segment_double::TRANS_DIP_MULT() {
 		if (DIP_GET(G->Diplotypes[curr_segment_index-1], pd)) {
 			for (int nd = 0 ; nd < 64 ; ++nd) {
 				if (DIP_GET(G->Diplotypes[curr_segment_index], nd)) {
-					DProbs[t] = (double)(HProbs[DIP_HAP0(pd)*HAP_NUMBER+DIP_HAP0(nd)] * scaling) * (double)(HProbs[DIP_HAP1(pd)*HAP_NUMBER+DIP_HAP1(nd)] * scaling);
+					DProbs[t] = (((double)HProbs[DIP_HAP0(pd)*HAP_NUMBER+DIP_HAP0(nd)]) * scaling) * ((double)(HProbs[DIP_HAP1(pd)*HAP_NUMBER+DIP_HAP1(nd)]) * scaling);
 					sumDProbs += DProbs[t];
 					t++;
 				}
@@ -305,7 +326,7 @@ bool haplotype_segment_double::TRANS_DIP_ADD() {
 		if (DIP_GET(G->Diplotypes[curr_segment_index-1], pd)) {
 			for (int nd = 0 ; nd < 64 ; ++nd) {
 				if (DIP_GET(G->Diplotypes[curr_segment_index], nd)) {
-					DProbs[t] = (double)(HProbs[DIP_HAP0(pd)*HAP_NUMBER+DIP_HAP0(nd)] * scaling) + (double)(HProbs[DIP_HAP1(pd)*HAP_NUMBER+DIP_HAP1(nd)] * scaling);
+					DProbs[t] = DProbs[t] = (((double)HProbs[DIP_HAP0(pd)*HAP_NUMBER+DIP_HAP0(nd)]) * scaling) + ((double)(HProbs[DIP_HAP1(pd)*HAP_NUMBER+DIP_HAP1(nd)]) * scaling);
 					sumDProbs += DProbs[t];
 					t++;
 				}

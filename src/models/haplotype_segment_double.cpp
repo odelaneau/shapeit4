@@ -42,6 +42,7 @@ haplotype_segment_double::haplotype_segment_double(genotype * _G, bitmatrix & H,
 	probSumK = vector < double > (n_cond_haps, 0.0f);
 	Alpha = vector < vector < double > > (segment_last - segment_first + 1, vector < double > (HAP_NUMBER * n_cond_haps, 0.0f));
 	AlphaSum = vector < vector < double > > (segment_last - segment_first + 1, vector < double > (HAP_NUMBER, 0.0f));
+	AlphaLocus = vector < int > (segment_last - segment_first + 1, 0);
 	AlphaSumSum = vector < double > (segment_last - segment_first + 1, 0.0);
 	if (n_missing > 0) {
 		AlphaMissing = vector < vector < double > > (n_missing, vector < double > (HAP_NUMBER * n_cond_haps, 0.0f));
@@ -84,33 +85,40 @@ void haplotype_segment_double::forward() {
 	curr_segment_locus = 0;
 	curr_abs_ambiguous = ambiguous_first;
 	curr_abs_missing = missing_first;
+	prev_abs_locus = locus_first;
 
 	for (curr_abs_locus = locus_first ; curr_abs_locus <= locus_last ; curr_abs_locus++) {
 		curr_rel_locus = curr_abs_locus - locus_first;
 		curr_rel_missing = curr_abs_missing - missing_first;
+		bool update_prev_locus = true;
+		char rare_allele = M.rare_allele[curr_abs_locus];
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 		bool mis = VAR_GET_MIS(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 		bool hom = !(amb || mis);
+		yt = (curr_abs_locus == locus_first)?0.0:M.getForwardTransProb(prev_abs_locus, curr_abs_locus);
+		nt = 1.0f - yt;
 
 		if (curr_rel_locus == 0) {
 			if (hom) INIT_HOM();
 			else if (amb) INIT_AMB();
 			else INIT_MIS();
 		} else if (curr_segment_locus != 0) {
-			if (hom) RUN_HOM(true);
-			else if (amb) RUN_AMB(true);
-			else RUN_MIS(true);
+			if (hom) update_prev_locus = RUN_HOM(rare_allele);
+			else if (amb) RUN_AMB();
+			else RUN_MIS();
 		} else {
-			if (hom) COLLAPSE_HOM(true);
-			else if (amb) COLLAPSE_AMB(true);
-			else COLLAPSE_MIS(true);
+			if (hom) COLLAPSE_HOM();
+			else if (amb) COLLAPSE_AMB();
+			else  COLLAPSE_MIS();
 		}
+		prev_abs_locus=update_prev_locus?curr_abs_locus:prev_abs_locus;
 
 		if (curr_segment_locus == (G->Lengths[curr_segment_index] - 1)) SUMK();
 		if (curr_segment_locus == G->Lengths[curr_segment_index] - 1) {
 			Alpha[curr_segment_index - segment_first] = prob;
 			AlphaSum[curr_segment_index - segment_first] = probSumH;
 			AlphaSumSum[curr_segment_index - segment_first] = probSumT;
+			AlphaLocus[curr_segment_index - segment_first] = prev_abs_locus;
 		}
 		if (mis) {
 			AlphaMissing[curr_rel_missing] = prob;
@@ -134,28 +142,34 @@ int haplotype_segment_double::backward(vector < double > & transition_probabilit
 	curr_abs_ambiguous = ambiguous_last;
 	curr_abs_missing = missing_last;
 	curr_abs_transition = transition_last;
+	prev_abs_locus = locus_last;
 
 	for (curr_abs_locus = locus_last ; curr_abs_locus >= locus_first ; curr_abs_locus--) {
 		curr_rel_locus = curr_abs_locus - locus_first;
 		curr_rel_missing = curr_abs_missing - missing_first;
+		char rare_allele = M.rare_allele[curr_abs_locus];
+		bool update_prev_locus = true;
 		bool amb = VAR_GET_AMB(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 		bool mis = VAR_GET_MIS(MOD2(curr_abs_locus), G->Variants[DIV2(curr_abs_locus)]);
 		bool hom = !(amb || mis);
+		yt = (curr_abs_locus == locus_last)?0.0:M.getBackwardTransProb(prev_abs_locus, curr_abs_locus);
+		nt = 1.0f - yt;
 
 		if (curr_abs_locus == locus_last) {
 			if (hom) INIT_HOM();
 			else if (amb) INIT_AMB();
 			else INIT_MIS();
 		} else if (curr_segment_locus != G->Lengths[curr_segment_index] - 1) {
-			if (hom) RUN_HOM(false);
-			else if (amb) RUN_AMB(false);
-			else RUN_MIS(false);
+			if (hom) update_prev_locus = RUN_HOM(rare_allele);
+			else if (amb) RUN_AMB();
+			else RUN_MIS();
 		} else {
-			if (hom) COLLAPSE_HOM(false);
-			else if (amb) COLLAPSE_AMB(false);
-			else COLLAPSE_MIS(false);
+			if (hom) COLLAPSE_HOM();
+			else if (amb) COLLAPSE_AMB();
+			else COLLAPSE_MIS();
 		}
 		if (curr_segment_locus == 0) SUMK();
+		prev_abs_locus=update_prev_locus?curr_abs_locus:prev_abs_locus;
 
 		if (curr_abs_locus == 0) SET_FIRST_TRANS(transition_probabilities);
 		if (curr_segment_locus == 0 && curr_abs_locus != locus_first) {
