@@ -31,7 +31,15 @@ class genotype_set {
 public:
 	//DATA
 	int n_site, n_ind;					//Number of variants, number of individuals
+	int Nrep;
 	vector < genotype * > vecG;			//Vector of genotype graphs
+
+	//MULTI-THREADING
+	int i_workers, i_jobs;
+	vector < pthread_t > id_workers;
+	pthread_mutex_t mutex_workers;
+
+
 
 	//CONSTRUCTOR/DESTRUCTOR
 	genotype_set();
@@ -40,7 +48,7 @@ public:
 	void init();
 	void solve();
 	void sample();
-	void collapse(int);
+	void collapse(int, int);
 };
 
 #endif

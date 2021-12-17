@@ -26,7 +26,8 @@ void sampler::declare_options() {
 	bpo::options_description opt_base ("Basic options");
 	opt_base.add_options()
 			("help", "Produce help message")
-			("seed", bpo::value<int>()->default_value(15052011), "Seed of the random number generator");
+			("seed", bpo::value<int>()->default_value(15052011), "Seed of the random number generator")
+			("thread,T", bpo::value<int>()->default_value(1), "Number of thread used");
 
 	bpo::options_description opt_input ("Input files");
 	opt_input.add_options()
@@ -89,6 +90,7 @@ void sampler::verbose_files() {
 void sampler::verbose_options() {
 	vrb.title("Parameters:");
 	vrb.bullet("Seed    : " + stb.str(options["seed"].as < int > ()));
+	vrb.bullet("Threads : " + stb.str(options["thread"].as < int > ()) + " threads");
 	if (options.count("sample")) vrb.bullet("MODE    : Sampling using seed [" + stb.str(options["seed"].as < int > ()) + "]");
 	if (options.count("solve")) vrb.bullet("MODE    : Solving");
 	if (options.count("collapse")) vrb.bullet("MODE    : Collpase haplotypes from [" + stb.str(options["collapse"].as < int > ()) + "] samplings");

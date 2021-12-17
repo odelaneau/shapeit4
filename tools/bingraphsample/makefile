@@ -29,7 +29,7 @@ CXXFLAG=-g
 LDFLAG=-O3
 
 #DYNAMIC LIBRARIES
-DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma
+DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma -lcurl -lcrypto
 
 #SHAPEIT SOURCES & BINARY
 BFILE=bin/bingraphsample

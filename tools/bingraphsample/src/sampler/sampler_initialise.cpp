@@ -29,6 +29,14 @@ void sampler::read_files_and_initialise() {
 	//step0: Initialize seed and multi-threading
 	rng.setSeed(options["seed"].as < int > ());
 
+	if (options["thread"].as < int > () > 1) {
+		G.i_workers = 0;
+		G.i_jobs = 0;
+		G.id_workers = vector < pthread_t > (options["thread"].as < int > ());
+		pthread_mutex_init(&G.mutex_workers, NULL);
+	}
+
+
 	//step2: Read input files
 	graph_reader readerG(G, V);
 	readerG.readGraphs(options["input"].as < string > ());

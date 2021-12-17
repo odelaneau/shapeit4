@@ -42,12 +42,16 @@ void sampler::write_files_and_finalise() {
 		mode = MODE_SOL;
 	}
 	if (options.count("collapse")) {
-		G.collapse(options["collapse"].as < int > ());
+		G.collapse(options["collapse"].as < int > (), options["thread"].as < int > ());
 		mode = MODE_COL;
 	}
 
+
+
 	//step1: writing best guess haplotypes in VCF/BCF file
 	haplotype_writer(G, V).writeHaplotypes(options["output"].as < string > (), mode, options["seed"].as < int > ());
+
+	if (options["thread"].as < int > () > 1) pthread_mutex_destroy(&G.mutex_workers);
 
 	//step2: Measure overall running time
 	vrb.bullet("Total running time = " + stb.str(tac.abs_time()) + " seconds");
