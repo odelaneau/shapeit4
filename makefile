@@ -36,6 +36,14 @@ LDFLAG=-O3
 #DYNAMIC LIBRARIES
 DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma -lcurl -lssl -lcrypto
 
+# MAC BUILD - DYNAMICALLY LINKED
+ifeq ($(shell uname -s),Darwin)
+  HTSLIB_LIB:=-lhts
+  BOOST_LIB_IO:=-lboost_iostreams
+  BOOST_LIB_PO:=-lboost_program_options
+  DYN_LIBS:=
+endif
+
 #SHAPEIT SOURCES & BINARY
 BFILE=bin/shapeit4.2
 HFILE=$(shell find src -name *.h)
