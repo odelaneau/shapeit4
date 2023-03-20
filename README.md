@@ -1,5 +1,14 @@
 # Segmented HAPlotype Estimation and Imputation Tools version 4 (SHAPEIT4)
 
+## VERSION 5
+
+Version 5 is availble from there:
+- WEBSITE https://odelaneau.github.io/shapeit5/
+- GIHUB https://github.com/odelaneau/shapeit5
+
+
+## Introduction
+
 SHAPEIT4 is a fast and accurate method for estimation of haplotypes (aka phasing) for SNP array and sequencing data. The version 4 is a refactored and improved version of the SHAPEIT algorithm with multiple key additional features:
 - It includes a Positional Burrow Wheeler Transform (PBWT) based approach to quickly select a small set of informative conditioning haplotypes to be used when updating the phase of an individual.
 - We have changed that way in which phase information in sequencing reads is input into the model. We now recommend the use of the WhatsHap tool as a pre-processing step to extract phase information from a bam file..
