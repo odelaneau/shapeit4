@@ -2,7 +2,7 @@
 
 ## VERSION 5
 
-Version 5 is availble from there:
+Stop using version 4. Use instead version 5, availble from there:
 - WEBSITE https://odelaneau.github.io/shapeit5/
 - GIHUB https://github.com/odelaneau/shapeit5
 
