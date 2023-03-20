@@ -2,8 +2,8 @@
 CXX=g++ -std=c++11
 
 #HTSLIB LIBRARY [SPECIFY YOUR OWN PATHS]
-HTSLIB_INC=$(HOME)/Tools/htslib-1.11
-HTSLIB_LIB=$(HOME)/Tools/htslib-1.11/libhts.a
+HTSLIB_INC=$(HOME)/Tools/htslib-1.15
+HTSLIB_LIB=$(HOME)/Tools/htslib-1.15/libhts.a
 
 #BOOST IOSTREAM & PROGRAM_OPTION LIBRARIES [SPECIFY YOUR OWN PATHS]
 BOOST_INC=/usr/include

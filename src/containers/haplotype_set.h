@@ -51,8 +51,6 @@ struct IBD2track {
 		from = min(from, rhs.from);
 		to = max(to, rhs.to);
 	}
-
-
 } ;
 
 class haplotype_set {
