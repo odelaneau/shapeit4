@@ -32,6 +32,11 @@ CXXFLAG=-O3 -mavx2 -mfma
 
 LDFLAG=-O3
 
+#INSTALLATION
+INSTALL=cp
+INSTALL_PROGRAM=$(INSTALL)
+INSTALL_DATA=$(INSTALL) -m 644
+DISTDIR=/usr/local
 
 #DYNAMIC LIBRARIES
 DYN_LIBS=-lz -lbz2 -lm -lpthread -llzma -lcurl -lssl -lcrypto
@@ -62,3 +67,6 @@ obj/%.o: %.cpp $(HFILE)
 
 clean: 
 	rm -f obj/*.o $(BFILE)
+
+install: $(BFILE)
+	$(INSTALL_PROGRAM) $(BFILE) $(DESTDIR)/$(BFILE)
