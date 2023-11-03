@@ -70,8 +70,8 @@ extern "C" {
 #define MAX_AMB				22
 
 //MACROS
-#define DIV2(v)	(v>>1)
-#define MOD2(v)	(v&1)
+#define DIV2(v)	((v)>>1)
+#define MOD2(v)	((v)&1)
 
 //NAMESPACE
 using namespace std;
