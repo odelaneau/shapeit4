@@ -1,9 +1,12 @@
-# Segmented HAPlotype Estimation and Imputation Tools version 4 (SHAPEIT4)
+# ⚠️ SHAPEIT4 is obsolete — Do not use
 
-## VERSION 5
-> __Warning__ Stop using version 4. Use instead version 5, availble from there:
-- WEBSITE https://odelaneau.github.io/shapeit5/
-- GIHUB https://github.com/odelaneau/shapeit5
+> **SHAPEIT4 is no longer maintained. Use SHAPEIT5.**
+>
+> The original SHAPEIT5 repository (`odelaneau/shapeit5`) has been repeatedly disabled by GitHub without clear explanation. **The code has been moved to a new repository.** Use the links below:
+>
+> 🔗 **New repository:** https://github.com/odelaneau/shapeit
+>
+> 🌐 **Website & docs:** https://odelaneau.github.io/shapeit/
 
 
 ## Introduction
